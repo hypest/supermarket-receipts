@@ -88,8 +88,7 @@ Chunk 2: Receipt Upload and QR Code Scanning
 Chunk 3: Receipt Parsing and Data Extraction
 * Implement backend logic for scraping receipt URLs.
 * Write parsing logic to extract store name, items, and prices.
-
-* Store pased receipt data in the database.
+* Store parsed receipt data in the database.
 * Test the parsing process with different receipt formats.
 
 Chunk 4: Analytics and Spending Trends
