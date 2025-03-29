@@ -70,6 +70,7 @@ Step 1: Detailed Blueprint for Building the Supermarket Receipt Application
 * Implementation:
   * Create APIs for user registration, login, and receipt parsing.
   * Develop backend functions for data analytics and notification management.
+
 Step 2: Break Down the Project into Small, Iterative Chunks
 --------------------------------------------------------------
 Chunk 1: User Authentication and Family Management
@@ -78,35 +79,42 @@ Chunk 1: User Authentication and Family Management
 * Implement email/password login and password recovery.
 * Allow users to create and manage family accounts.
 * Store user and family data in the database.
+
 Chunk 2: Receipt Upload and QR Code Scanning
 * Implement QR code scanning functionality.
 * Create a receipt upload page with QR code scanning or manual URL input.
 * Store receipt URLs and link them to user accounts.
+
 Chunk 3: Receipt Parsing and Data Extraction
 * Implement backend logic for scraping receipt URLs.
 * Write parsing logic to extract store name, items, and prices.
 
 * Store pased receipt data in the database.
 * Test the parsing process with different receipt formats.
+
 Chunk 4: Analytics and Spending Trends
 * Implement logic to aggregate spending data.
 * Categorize items by type (e.g., groceries, toiletries).
 * Create a service to calculate spending trends over time.
 * Display analytics results on the frontend.
+
 Chunk 5: Notification System
 * Set up Vercel serverless functions for notifications.
 * Implement logic to send reminders and suggestions to users.
 * Store notification data in the database.
 * Send email, SMS, or push notifications.
+
 Chunk 6: Frontend Implementation
 * Design and implement UI components using React and Chakra UI.
 * Set up routing with Next.js.
 * Implement the receipt dashboard and analytics page.
 * Add family management interface.
+
 Chunk 7: Backend Implementation
 * Create APIs for receipt processing, user management, and analytics.
 * Implement serverless functions to handle requests.
 * Set up database schemas for receipts, analytics, and notifications.
+
 Step 3: Break Chunks into Smaller, Iterative Tasks
 --------------------------------------------------------------
 Chunk 1: User Authentication and Family Management
@@ -116,37 +124,44 @@ Chunk 1: User Authentication and Family Management
 * Task 4: Create user registration and login pages in React.
 * Task 5: Implement user profile and family creation.
 * Task 6: Store user and family data in Supabase.
+
 Chunk 2: Receipt Upload and QR Code Scanning
 * Task 1: Install react-qr-reader library.
 * Task 2: Create receipt upload page with QR code scanning.
 * Task 3: Implement URL parsing for manual entry of receipt URLs.
 * Task 4: Store URLs in Supabase linked to the logged-in user.
+
 Chunk 3: Receipt Parsing and Data Extraction
 * Task 1: Implement a backend function to fetch receipt data from URL.
 * Task 2: Parse receipt data to extract store name, items, and prices.
 * Task 3: Store parsed data in the Receipt model in Supabase.
 * Task 4: Test receipt parsing with different receipt formats.
+
 Chunk 4: Analytics and Spending Trends
 * Task 1: Create a function to aggregate total spending by category.
 * Task 2: Implement logic to calculate spending trends over time.
 * Task 3: Display the aggregated data on the frontend.
 * Task 4: Implement report generation for weekly and monthly spending.
+
 Chunk 5: Notification System
 * Task 1: Set up Vercel serverless functions for notifications.
 * Task 2: Implement logic to check for incomplete receipts or spending trends.
 * Task 3: Send notifications to users (email, push).
 * Task 4: Store notification status in the database.
+
 Chunk 6: Frontend Implementation
 * Task 1: Set up React and Chakra UI.
 * Task 2: Create UI components for user authentication.
 * Task 3: Create UI components for receipt management.
 * Task 4: Design analytics page and family management UI.
 * Task 5: Implement routing in Next.js.
+
 Chunk 7: Backend Implementation
 * Task 1: Create backend APIs for user management and receipt handling.
 * Task 2: Create serverless functions for processing receipts.
 * Task 3: Set up database schemas for receipt, analytics, and notifications.
 * Task 4: Test API functionality and integrate it with the frontend.
+
 Step 4: Code Generation Prompts
 --------------------------------------------------------------
 Prompt 1: Setting Up Supabase Authentication (User Registration and Login)
