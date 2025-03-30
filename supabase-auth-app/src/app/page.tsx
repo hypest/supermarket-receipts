@@ -1,5 +1,6 @@
-import { createClient } from '@/supabase/server'
-import { redirect } from 'next/navigation'
+import { createClient } from '@/supabase/server';
+import { redirect } from 'next/navigation';
+import QrScanner from '@/components/QrScanner'; // Import the scanner component
 
 export default async function Home() {
   const supabase = await createClient()
@@ -33,6 +34,10 @@ export default async function Home() {
             Sign Out
           </button>
         </form>
+
+        {/* Conditionally render QrScanner if user is logged in */}
+        {data.user && <QrScanner userId={data.user.id} />}
+
       </main>
     </div>
   )
