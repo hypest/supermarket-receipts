@@ -76,9 +76,9 @@ const QrScanner = ({ userId }: { userId: string }) => {
       }
     };
 
-    const onScanFailure: QrcodeErrorCallback = (error: any) => { // Use 'any' or 'unknown' and check type
+    const onScanFailure: QrcodeErrorCallback = (error: unknown) => { // Use 'unknown' instead of 'any'
       let errorMessage = 'Unknown scan error';
-      let errorToLog: any = error; // Keep original error for logging if needed
+      const errorToLog = error; // Use const and let type be inferred (unknown)
 
       if (typeof error === 'string') {
         errorMessage = error;
