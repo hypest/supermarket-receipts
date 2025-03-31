@@ -7,41 +7,37 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+// Removed Text import as it's replaced by NavGraph
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
+import com.hypest.supermarketreceiptsapp.navigation.NavGraph // Import NavGraph
+// Removed Preview import as Greeting is removed
 import com.hypest.supermarketreceiptsapp.ui.theme.SupermarketReceiptsAppTheme
+import dagger.hilt.android.AndroidEntryPoint
+// Removed SupabaseClient import
+import javax.inject.Inject // Keep Inject if other things are injected, otherwise remove
 
+
+@AndroidEntryPoint // Add Hilt entry point annotation
 class MainActivity : ComponentActivity() {
+
+    // Removed SupabaseClient injection
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             SupermarketReceiptsAppTheme {
+                val navController = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    // Set up the NavHost using the NavGraph composable
+                    NavGraph(navController = navController)
+                    // Note: innerPadding might need to be passed down into NavGraph/Screens if using Scaffold elements like TopAppBar
                 }
             }
         }
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    SupermarketReceiptsAppTheme {
-        Greeting("Android")
-    }
-}
+// Removed Greeting and GreetingPreview composables
