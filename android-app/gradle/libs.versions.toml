@@ -15,6 +15,7 @@ mlkitBarcode = "17.2.0" # ML Kit Barcode Scanning version
 mockito = "5.12.0" # Mockito version
 kotlinxCoroutines = "1.8.1" # Coroutines version (including test)
 ktor = "3.0.0" # Ktor version
+kotlinxSerialization = "1.6.3" # Kotlinx Serialization version
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -63,6 +64,7 @@ mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning"
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version = "5.4.0" } # Check for latest version if needed
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
 # Desugaring
 android-desugarJdkLibs = { group = "com.android.tools", name = "desugar_jdk_libs", version = "2.0.4" } # Check for latest version
@@ -73,3 +75,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" } # Hilt plugin
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" } # Kotlinx Serialization plugin

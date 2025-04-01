@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt) // Add Hilt plugin
+    alias(libs.plugins.kotlin.serialization) // Add Kotlin Serialization plugin
     kotlin("kapt") // Add kapt for Hilt
 }
 
@@ -141,6 +142,9 @@ dependencies {
     // Debug
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Kotlinx Serialization
+    implementation(libs.kotlinx.serialization.json)
 
     // Core library desugaring dependency
     coreLibraryDesugaring(libs.android.desugarJdkLibs) // Uncommented
