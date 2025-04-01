@@ -13,7 +13,7 @@ class ReceiptRepositoryImpl @Inject constructor(
 ) : ReceiptRepository {
 
     companion object {
-        private const val TABLE_NAME = "receipts"
+        private const val TABLE_NAME = "scanned_urls"
         private const val TAG = "ReceiptRepository"
     }
 
