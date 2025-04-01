@@ -4,8 +4,7 @@ import android.util.Log
 import com.hypest.supermarketreceiptsapp.domain.model.Receipt
 import com.hypest.supermarketreceiptsapp.domain.repository.ReceiptRepository
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.postgrest.postgrest // v3 extension function
-import kotlinx.serialization.json.Json // Import for potential serialization configuration
+import io.github.jan.supabase.postgrest.postgrest
 import javax.inject.Inject
 
 class ReceiptRepositoryImpl @Inject constructor(
