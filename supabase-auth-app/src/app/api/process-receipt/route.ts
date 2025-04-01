@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseClient } from '@supabase/supabase-js'; // Import SupabaseClient type
-import { createClient } from '@/supabase/server';
+// Import the service role client creator instead of the default one
+import { createServiceRoleClient } from '@/supabase/server';
 import { getParserForUrl } from '@/lib/receipt-parsers'; // Import the registry function
 import { ParsedReceiptData } from '@/lib/receipt-parsers/types'; // Import the shared type
 
@@ -50,7 +51,8 @@ async function updateJobStatus(supabase: SupabaseClient, jobId: string, status: 
 
 export async function POST(req: NextRequest) {
   console.log('Received request on /api/process-receipt');
-  const supabase = await createClient();
+  // Use the service role client for backend operations
+  const supabase = createServiceRoleClient();
 
   // --- Security Check: Verify Supabase Webhook Secret ---
   const webhookSecret = process.env.SUPABASE_WEBHOOK_SECRET;
