@@ -115,7 +115,8 @@ dependencies {
     implementation(libs.supabase.auth)      // Include Supabase Auth
     implementation(libs.supabase.postgrest) // Include Supabase Postgrest
 
-    // implementation("io.ktor:ktor-client-android") // Ktor client might be needed, add if required by Supabase v3
+    implementation(libs.ktor.client.core)    // Ktor client core (required by Supabase v3)
+    implementation(libs.ktor.client.android) // Ktor Android client engine (required by Supabase v3)
     // implementation(libs.supabase.compose.auth) // Add if Compose Auth UI is needed
 
     // CameraX

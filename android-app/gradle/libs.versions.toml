@@ -14,6 +14,7 @@ camerax = "1.3.4" # CameraX version
 mlkitBarcode = "17.2.0" # ML Kit Barcode Scanning version
 mockito = "5.12.0" # Mockito version
 kotlinxCoroutines = "1.8.1" # Coroutines version (including test)
+ktor = "3.0.0" # Ktor version
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -44,6 +45,10 @@ supabase-auth = { group = "io.github.jan-tennert.supabase", name = "auth-kt", ve
 #supabase-postgrest = { group = "io.github.jan-tennert", name = "supabase-postgrest-mpp", version.ref = "supabase" } # Use postgrest-kt for v3
 supabase-postgrest = { group = "io.github.jan-tennert.supabase", name = "postgrest-kt", version.ref = "supabase" } # Use postgrest-kt for v3
 # supabase-compose-auth = { group = "io.github.jan-tennert", name = "supabase-compose-auth-ui", version.ref = "supabase" } # Add if needed
+
+# Ktor Client (Needed by Supabase)
+ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
+ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
 
 # CameraX
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
