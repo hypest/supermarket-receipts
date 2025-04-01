@@ -8,11 +8,13 @@ let browserInstance: Browser | null = null;
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance || !browserInstance.isConnected()) {
     console.log('Launching new Puppeteer browser instance for serverless...');
+    const executablePath = await chromium.executablePath();
+    console.log(`Using Chromium executable path: ${executablePath}`);
     // Use @sparticuz/chromium for executable path and args
     browserInstance = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
+      executablePath: executablePath,
       headless: chromium.headless, // Use chromium.headless value
       // ignoreHTTPSErrors: true, // This option belongs in page.goto, not launch
     });
@@ -60,8 +62,9 @@ const epsilonSklavenitisParser: ReceiptParser = {
       await page.setViewport({ width: 1280, height: 800 }); // Set a reasonable viewport
 
       console.log(`${logPrefix}Navigating to ${url}...`);
-      // Increased timeout for navigation as well
-      await page.goto(url, { waitUntil: 'networkidle0', timeout: 45000 });
+      // Change waitUntil to 'domcontentloaded' - might be more reliable in serverless
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      console.log(`${logPrefix}Initial page navigation complete (DOM loaded).`);
 
       // Wait for the container with final details (UID/MARK) to ensure rendering
       const renderedContentSelector = 'div.doc-info__container'; // Confirmed selector
