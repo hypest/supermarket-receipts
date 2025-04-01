@@ -69,8 +69,10 @@ const epsilonSklavenitisParser: ReceiptParser = {
       try {
         await page.waitForSelector(renderedContentSelector, { timeout: 35000 });
         console.log(`${logPrefix}Rendered content selector found.`);
-      } catch (waitError) {
-        console.warn(`${logPrefix}Timeout waiting for selector "${renderedContentSelector}". Page might not have rendered correctly or selector is wrong. Trying to get content anyway...`);
+      } catch (waitError: unknown) { // Type the error
+        // Use the waitError variable in the warning message
+        const errorMsg = waitError instanceof Error ? waitError.message : String(waitError);
+        console.warn(`${logPrefix}Timeout or error waiting for selector "${renderedContentSelector}": ${errorMsg}. Page might not have rendered correctly or selector is wrong. Trying to get content anyway...`);
         // Optionally capture a screenshot for debugging
         try { await page.screenshot({ path: `error_screenshot_${jobId || 'test'}.png`, fullPage: true }); } catch (ssError) { console.error("Failed to take screenshot:", ssError); }
       }
@@ -111,7 +113,8 @@ const epsilonSklavenitisParser: ReceiptParser = {
         const dateText = dateElement.text().trim(); // e.g., "22/03/2025 12:30"
         const dateMatch = dateText.match(/(\d{2})\/(\d{2})\/(\d{4})/); // Extract DD/MM/YYYY part
         if (dateMatch && dateMatch.length === 4) {
-            const [_, day, month, year] = dateMatch;
+            // Destructure only the needed parts (day, month, year), ignoring the full match at index 0
+            const [, day, month, year] = dateMatch;
             // Note: Month is 0-indexed in JS Date, so subtract 1
             const utcDate = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
             if (!isNaN(utcDate.getTime())) {
