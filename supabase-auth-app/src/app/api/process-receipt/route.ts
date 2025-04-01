@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SupabaseClient } from '@supabase/supabase-js'; // Import SupabaseClient type
+
+// Configure Vercel function max duration (in seconds)
+// Hobby: max 60, Pro: max 300, Enterprise: max 900
+export const maxDuration = 60;
 // Import the service role client creator instead of the default one
 import { createServiceRoleClient } from '@/supabase/server';
 import { getParserForUrl } from '@/lib/receipt-parsers'; // Import the registry function
