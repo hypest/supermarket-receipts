@@ -8,6 +8,7 @@ import androidx.compose.material3.* // Keep Button, Scaffold, Text, add Circular
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview // Add Preview for easier UI checks
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel // Re-add hiltViewModel
@@ -27,11 +28,12 @@ fun MainScreen(
     mainViewModel: MainViewModel = hiltViewModel() // Re-inject MainViewModel
 ) {
     val sessionStatus by authViewModel.sessionStatus.collectAsState() // Re-add session observation
-    val hasCameraPermission by mainViewModel.hasCameraPermission // Use ViewModel state
-    val saveStatus by mainViewModel.saveStatus // Use ViewModel state
+    val hasCameraPermission by mainViewModel.hasCameraPermission
+    val saveStatus by mainViewModel.saveStatus
+    val isScannerVisible by mainViewModel.isScannerVisible // Get the new state
     val context = LocalContext.current
 
-    // Re-add navigation based on auth state
+    // Navigation based on auth state
     LaunchedEffect(sessionStatus) {
         if (sessionStatus is SessionStatus.NotAuthenticated) {
             navController.navigate(Screen.Login.route) {
@@ -56,17 +58,26 @@ fun MainScreen(
             contentAlignment = Alignment.Center
         ) {
             if (hasCameraPermission) {
-                // Show scanner based on ViewModel state
-                if (saveStatus == SaveStatus.Idle || saveStatus == SaveStatus.Saving) {
+                // Show scanner only if permission granted AND scanner is set to visible
+                if (isScannerVisible) {
                     QrCodeScanner(
-                        modifier = Modifier.fillMaxSize(),
+                        // modifier = Modifier.fillMaxSize(), // Modifier might not be needed as scanner takes over screen
                         onQrCodeScanned = { url ->
-                            mainViewModel.onQrCodeScanned(url) // Call ViewModel
+                            mainViewModel.onQrCodeScanned(url) // Existing call
+                        },
+                        onScanCancelled = {
+                            mainViewModel.hideScanner() // Hide scanner if user cancels
+                        },
+                        onScanError = { exception ->
+                            // Log error or display message if needed, then hide scanner
+                            // The error state will be set by onQrCodeScanned if it fails during save
+                            // This handles errors *within* the scanner component itself
+                            mainViewModel.hideScanner()
                         }
                     )
                 }
 
-                // Overlay UI for status messages (using ViewModel state)
+                // Overlay UI for status messages AND the button to show scanner
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -74,32 +85,44 @@ fun MainScreen(
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Display status based on ViewModel state
-                    when (saveStatus) {
-                        SaveStatus.Idle -> {
-                            // Only show prompt if scanner is visible
-                            if (hasCameraPermission) Text("Point camera at a QR code")
+                    // Button to show scanner if it's hidden and permission is granted
+                    if (!isScannerVisible && hasCameraPermission) {
+                        Button(onClick = { mainViewModel.showScanner() }) {
+                            Text("Scan QR Code")
                         }
-                        SaveStatus.Saving -> {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Saving URL...")
-                        }
-                        SaveStatus.Success -> {
-                            Text("URL Saved Successfully!")
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = { mainViewModel.resetScanState() }) {
-                                Text("Scan Another")
+                        Spacer(modifier = Modifier.height(8.dp)) // Add space if button is shown
+                    }
+
+                    // Display status based on ViewModel state (only when scanner is not visible or saving)
+                    if (!isScannerVisible || saveStatus == SaveStatus.Saving) {
+                        when (saveStatus) {
+                            SaveStatus.Idle -> {
+                                // No text needed here anymore, button handles showing scanner
                             }
-                        }
-                        is SaveStatus.Error -> {
-                            Text("Error: ${(saveStatus as SaveStatus.Error).message}")
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = { mainViewModel.resetScanState() }) {
-                                Text("Try Again")
+                            SaveStatus.Saving -> {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Saving URL...")
+                            }
+                            SaveStatus.Success -> {
+                                Text("URL Saved Successfully!")
+                                Spacer(modifier = Modifier.height(8.dp))
+                                // resetScanState now also shows the scanner
+                                Button(onClick = { mainViewModel.resetScanState() }) {
+                                    Text("Scan Another")
+                                }
+                            }
+                            is SaveStatus.Error -> {
+                                Text("Error: ${(saveStatus as SaveStatus.Error).message}")
+                                Spacer(modifier = Modifier.height(8.dp))
+                                // resetScanState now also shows the scanner
+                                Button(onClick = { mainViewModel.resetScanState() }) {
+                                    Text("Try Again")
+                                }
                             }
                         }
                     }
+                    // Logout button always visible when camera permission is granted
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = { authViewModel.signOut() }) { // Call ViewModel for logout
                         Text("Logout")
