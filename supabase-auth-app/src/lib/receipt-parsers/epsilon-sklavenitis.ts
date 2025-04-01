@@ -1,48 +1,192 @@
-import axios from 'axios';
+import puppeteer, { Browser, Page } from 'puppeteer'; // Import Page type
+import * as cheerio from 'cheerio';
 import { ReceiptParser, ParsedReceiptData } from './types';
 
-// Parser for receipts hosted on epsilondigital-sklavenitis.epsilonnet.gr
+// --- Puppeteer Browser Management ---
+let browserInstance: Browser | null = null;
+async function getBrowser(): Promise<Browser> {
+  if (!browserInstance || !browserInstance.isConnected()) {
+    console.log('Launching new Puppeteer browser instance...');
+    browserInstance = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu', // Often helps in server environments
+      ],
+    });
+    console.log('Puppeteer browser launched.');
+  }
+  return browserInstance;
+}
+
+async function closeBrowserInstance(): Promise<void> {
+    if (browserInstance) {
+        console.log('Closing Puppeteer browser instance...');
+        await browserInstance.close();
+        browserInstance = null;
+        console.log('Puppeteer browser closed.');
+    }
+}
+
+// Ensure browser is closed on exit signals
+process.on('SIGINT', closeBrowserInstance);
+process.on('SIGTERM', closeBrowserInstance);
+process.on('exit', closeBrowserInstance);
+// --- End Puppeteer Management ---
+
+
+// --- Parser Implementation ---
 const epsilonSklavenitisParser: ReceiptParser = {
   parse: async (url: string, jobId?: string): Promise<ParsedReceiptData> => {
     const logPrefix = jobId ? `Job ${jobId}: ` : '';
-    console.log(`${logPrefix}Using Epsilon/Sklavenitis parser for URL: ${url}`);
+    console.log(`${logPrefix}Using Epsilon/Sklavenitis Puppeteer parser for URL: ${url}`);
 
     const headerInfo: ParsedReceiptData['headerInfo'] = {
-        receipt_date: null,
-        total_amount: null,
-        store_name: 'ΣΚΛΑΒΕΝΙΤΗΣ', // Derived from hostname
-        uid: null,
+      receipt_date: null,
+      total_amount: null,
+      store_name: 'ΣΚΛΑΒΕΝΙΤΗΣ', // Derived from hostname
+      uid: null,
     };
     const items: ParsedReceiptData['items'] = [];
+    let page: Page | null = null; // Use Page type from puppeteer
+    let pageContent: string | null = null;
 
     try {
-      // Fetch the HTML - primarily to confirm reachability and potentially extract basic info if structure changes
-      console.log(`${logPrefix}Fetching URL: ${url}`);
-      await axios.get<string>(url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' },
-        timeout: 15000,
-        responseType: 'text'
-      });
-      // const html = response.data;
-      // console.log(`${logPrefix}Fetched HTML (length: ${html.length})`);
+      const browser = await getBrowser();
+      page = await browser.newPage();
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+      await page.setViewport({ width: 1280, height: 800 }); // Set a reasonable viewport
 
-      // --- WARNING ---
-      // The actual receipt data on this page is rendered by Blazor WebAssembly
-      // and embedded in an encoded format within the initial HTML source.
-      // Reliably parsing this requires browser automation (e.g., Puppeteer/Playwright)
-      // which is not available in this environment.
-      // Returning only the store name derived from the URL.
-      console.warn(`${logPrefix}Cannot parse detailed receipt data from Blazor page structure for ${url}. Returning store name only.`);
-      // --- END WARNING ---
+      console.log(`${logPrefix}Navigating to ${url}...`);
+      // Increased timeout for navigation as well
+      await page.goto(url, { waitUntil: 'networkidle0', timeout: 45000 });
 
-      // Future enhancement: If browser automation becomes available, implement parsing here.
-      // For now, we only have the store name.
+      // Wait for the container with final details (UID/MARK) to ensure rendering
+      const renderedContentSelector = 'div.doc-info__container'; // Confirmed selector
+      console.log(`${logPrefix}Waiting for selector "${renderedContentSelector}" to appear...`);
+      try {
+        await page.waitForSelector(renderedContentSelector, { timeout: 35000 });
+        console.log(`${logPrefix}Rendered content selector found.`);
+      } catch (waitError) {
+        console.warn(`${logPrefix}Timeout waiting for selector "${renderedContentSelector}". Page might not have rendered correctly or selector is wrong. Trying to get content anyway...`);
+        // Optionally capture a screenshot for debugging
+        try { await page.screenshot({ path: `error_screenshot_${jobId || 'test'}.png`, fullPage: true }); } catch (ssError) { console.error("Failed to take screenshot:", ssError); }
+      }
+
+      console.log(`${logPrefix}Extracting rendered HTML content...`);
+      pageContent = await page.content();
+      console.log(`${logPrefix}Extracted HTML content (length: ${pageContent?.length ?? 0})`);
 
     } catch (error: unknown) {
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        console.error(`${logPrefix}Error fetching or processing Epsilon/Sklavenitis URL ${url}: ${errorMsg}`);
-        // Re-throw the error to mark the job as failed in the calling API route
-        throw new Error(`Failed to fetch or process Epsilon/Sklavenitis URL: ${errorMsg}`);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`${logPrefix}Error during Puppeteer navigation/rendering for ${url}: ${errorMsg}`);
+      throw new Error(`Puppeteer failed for Epsilon/Sklavenitis URL: ${errorMsg}`);
+    } finally {
+      if (page) {
+        try {
+            await page.close();
+            console.log(`${logPrefix}Puppeteer page closed.`);
+        } catch (closeError) {
+            console.error(`${logPrefix}Error closing Puppeteer page: ${closeError instanceof Error ? closeError.message : String(closeError)}`);
+        }
+      }
+      // Note: Browser instance is kept open for potential reuse by subsequent jobs
+    }
+
+    if (!pageContent) {
+      throw new Error(`${logPrefix}Failed to retrieve page content using Puppeteer.`);
+    }
+
+    // --- Parse the RENDERED HTML using Cheerio ---
+    console.log(`${logPrefix}Parsing rendered HTML with Cheerio...`);
+    const $ = cheerio.load(pageContent);
+
+    // --- Extract Data using confirmed selectors ---
+
+    // Date
+    try {
+        const dateElement = $('span#issue-date');
+        const dateText = dateElement.text().trim(); // e.g., "22/03/2025 12:30"
+        const dateMatch = dateText.match(/(\d{2})\/(\d{2})\/(\d{4})/); // Extract DD/MM/YYYY part
+        if (dateMatch && dateMatch.length === 4) {
+            const [_, day, month, year] = dateMatch;
+            // Note: Month is 0-indexed in JS Date, so subtract 1
+            const utcDate = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+            if (!isNaN(utcDate.getTime())) {
+                headerInfo.receipt_date = utcDate.toISOString();
+            } else { console.warn(`${logPrefix}Parsed invalid date components: ${dateMatch[0]}`); }
+        } else { console.warn(`${logPrefix}Could not find date match (DD/MM/YYYY) in text: "${dateText}"`); }
+    } catch (e) { console.error(`${logPrefix}Error parsing date: ${e instanceof Error ? e.message : String(e)}`); }
+
+    // Total Amount
+    try {
+        const totalValue = $('input#gross-value').val(); // Get value attribute
+        if (totalValue) {
+            // Assuming value is like "29.22" (using dot as decimal separator)
+            headerInfo.total_amount = parseFloat(totalValue) || null;
+        } else { console.warn(`${logPrefix}Could not find value for total amount input#gross-value`); }
+    } catch (e) { console.error(`${logPrefix}Error parsing total amount: ${e instanceof Error ? e.message : String(e)}`); }
+
+    // UID
+    try {
+        const uidSpan = $('div.doc-info__container span:contains("UID:")');
+        if (uidSpan.length > 0) {
+            // Get the text of the span containing "UID:", then extract the actual UID value
+            // Assuming the format is "UID: ACTUAL_UID_VALUE" possibly on the same line or next
+            const fullText = uidSpan.text();
+            const uidMatch = fullText.match(/UID:\s*([A-F0-9]+)/i); // Match "UID:" followed by hex chars
+            if (uidMatch && uidMatch[1]) {
+                 headerInfo.uid = uidMatch[1];
+            } else {
+                // Fallback: Check the next sibling element if UID wasn't in the same span
+                const nextElementText = uidSpan.next().text().trim();
+                 if (nextElementText.match(/^[A-F0-9]+$/i)) { // Check if it looks like a hex UID
+                    headerInfo.uid = nextElementText;
+                 } else {
+                    console.warn(`${logPrefix}Could not extract UID value from text: "${fullText}" or its sibling.`);
+                 }
+            }
+        } else { console.warn(`${logPrefix}Could not find element containing "UID:" text.`); }
+    } catch (e) { console.error(`${logPrefix}Error parsing UID: ${e instanceof Error ? e.message : String(e)}`); }
+
+    // Items
+    try {
+        const itemsTable = $('div.document-lines-table table.table');
+        itemsTable.find('tbody tr').each((index: number, element: cheerio.Element) => {
+            const columns = $(element).find('td');
+            if (columns.length >= 6) { // Need at least 6 columns for Name, Qty, VAT, Net
+                const name = $(columns[1]).text().trim(); // Index 1
+                const quantityText = $(columns[2]).text().trim(); // Index 2
+                const vatAmountText = $(columns[4]).text().trim(); // Index 4
+                const netValueText = $(columns[5]).text().trim(); // Index 5
+
+                const quantity = parseFloat(quantityText.replace(',', '.')) || 0; // Handle potential comma decimal
+                const vatAmount = parseFloat(vatAmountText.replace(',', '.')) || 0;
+                const netValue = parseFloat(netValueText.replace(',', '.')) || 0;
+
+                // Calculate total line price
+                const price = parseFloat((netValue + vatAmount).toFixed(2));
+
+                if (name && quantity > 0 && !isNaN(price)) {
+                    items.push({ name, quantity, price });
+                } else if (name || quantityText || vatAmountText || netValueText) {
+                    console.warn(`${logPrefix}Skipping item row ${index + 1}: Could not parse data reliably (Name: '${name}', Qty: '${quantityText}', VAT: '${vatAmountText}', Net: '${netValueText}')`);
+                }
+            } else {
+                console.warn(`${logPrefix}Skipping item row ${index + 1} due to insufficient columns (${columns.length})`);
+            }
+        });
+    } catch (e) { console.error(`${logPrefix}Error parsing items: ${e instanceof Error ? e.message : String(e)}`); }
+    // --- End Data Extraction ---
+
+    console.log(`${logPrefix}Parsed Header:`, headerInfo);
+    console.log(`${logPrefix}Parsed ${items.length} items.`);
+
+    if (items.length === 0 && !headerInfo.total_amount && !headerInfo.receipt_date && !headerInfo.uid) {
+      console.warn(`${logPrefix}Puppeteer parsing yielded no significant data from ${url}. Check selectors and page rendering.`);
+      // Consider if this should be an error or just return empty data
     }
 
     return { headerInfo, items };
@@ -50,3 +194,5 @@ const epsilonSklavenitisParser: ReceiptParser = {
 };
 
 export default epsilonSklavenitisParser;
+// Export closeBrowser function if needed elsewhere (e.g., for graceful shutdown in main app)
+export { closeBrowserInstance as closeEpsilonSklavenitisBrowser };
