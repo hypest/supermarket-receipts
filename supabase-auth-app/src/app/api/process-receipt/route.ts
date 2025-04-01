@@ -144,6 +144,7 @@ export async function POST(req: NextRequest) {
         receipt_date: parsedData.headerInfo.receipt_date,
         total_amount: parsedData.headerInfo.total_amount,
         store_name: parsedData.headerInfo.store_name,
+        uid: parsedData.headerInfo.uid, // Add the parsed UID here
       })
       .select('id')
       .single();

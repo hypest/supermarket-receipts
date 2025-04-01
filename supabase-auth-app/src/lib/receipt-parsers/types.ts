@@ -4,6 +4,7 @@ export interface ParsedReceiptData {
     receipt_date?: string | null; // ISO timestamp string
     total_amount?: number | null;
     store_name?: string | null;
+    uid?: string | null; // Unique identifier from the government service
     // Add other common header fields if needed
   };
   items: {

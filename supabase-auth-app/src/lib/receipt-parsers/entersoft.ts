@@ -9,11 +9,12 @@ const entersoftParser: ReceiptParser = {
 
     // 1. Fetch the initial webpage content to find the iframe
     console.log(`${logPrefix}Fetching initial URL: ${url}`);
-    const initialResponse = await axios.get(url, {
+    const initialResponse = await axios.get<string>(url, { // Specify expected response type as string
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' },
-      timeout: 15000
+      timeout: 15000,
+      responseType: 'text' // Keep responseType for clarity and potential runtime behavior
     });
-    const initialHtml = initialResponse.data;
+    const initialHtml = initialResponse.data; // Type is now correctly inferred as string
     console.log(`${logPrefix}Fetched initial HTML (length: ${initialHtml.length})`);
 
     // 2. Parse initial HTML to find the iframe source
@@ -27,14 +28,15 @@ const entersoftParser: ReceiptParser = {
     // 3. Construct absolute URL and fetch iframe content
     const iframeUrl = new URL(iframeSrc, url).toString();
     console.log(`${logPrefix}Found iframe URL: ${iframeUrl}. Fetching content...`);
-    const receiptResponse = await axios.get(iframeUrl, {
+    const receiptResponse = await axios.get<string>(iframeUrl, { // Specify expected response type as string
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'Referer': url
       },
-      timeout: 20000
+      timeout: 20000,
+      responseType: 'text' // Keep responseType for clarity and potential runtime behavior
     });
-    const receiptHtml = receiptResponse.data;
+    const receiptHtml = receiptResponse.data; // Type is now correctly inferred as string
     console.log(`${logPrefix}Fetched receipt HTML (length: ${receiptHtml.length})`);
 
     // 4. Parse the receipt HTML
@@ -71,10 +73,45 @@ const entersoftParser: ReceiptParser = {
     } else {
       headerInfo.total_amount = null;
     }
+
+    // Extract UID (Unique Identifier) - More specific selector based on provided HTML
+    const uidLabelDiv = $('div.col.fontSize8pt.mr-0.pr-0:contains("UID:")');
+    let uidValue: string | null = null;
+    if (uidLabelDiv.length > 0) {
+        // Find the specific sibling div containing the value
+        const uidValueDiv = uidLabelDiv.siblings('div.col-8.fontSize8pt.ml-0.pl-0');
+        if (uidValueDiv.length > 0) {
+            uidValue = uidValueDiv.text().trim() || null;
+            console.log(`${logPrefix}Found UID using specific selector.`);
+        }
+    }
+
+    // Fallback to the previous, slightly more general selector if the specific one fails
+    if (!uidValue) {
+        console.log(`${logPrefix}Specific UID selector failed, trying fallback...`);
+        let uidElement = $('div:contains("UID:")').next('div'); // Check for "UID:" label
+        if (uidElement.length === 0) {
+          // If not found, check for Greek label "Αρ. Σήμανσης:"
+          uidElement = $('div:contains("Αρ. Σήμανσης:")').next('div');
+        }
+        if (uidElement.length > 0) {
+            uidValue = uidElement.text().trim() || null;
+            console.log(`${logPrefix}Found UID using fallback selector.`);
+        }
+    }
+
+    if (uidValue) {
+        headerInfo.uid = uidValue;
+    } else {
+        console.warn(`${logPrefix}Could not find UID element using specific or fallback patterns.`);
+        headerInfo.uid = null;
+    }
+
+
     console.log(`${logPrefix}Extracted Header Info:`, headerInfo);
 
     // Extract items
-    $('#no-more-tables table tbody tr').each((index, element) => {
+    $('#no-more-tables table tbody tr').each((index: number, element: cheerio.Element) => {
       if ($(element).hasClass('comments')) return;
 
       const columns = $(element).find('td');
