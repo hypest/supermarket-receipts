@@ -1,131 +1,72 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useState, useEffect } from 'react';
+import { Session } from '@supabase/supabase-js';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { supabase } from './lib/supabaseClient'; // Import our configured client
+import AuthScreen from './screens/AuthScreen'; // We will create this screen
+import HomeScreen from './screens/HomeScreen'; // We will create this screen
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+// Define types for our navigation stack parameters
+export type RootStackParamList = {
+  Auth: undefined; // No params expected for Auth screen
+  Home: { session: Session }; // Home screen expects the session object
+};
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+const App = () => {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+  useEffect(() => {
+    // Check for existing session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      // No need to setLoading here as the initial check handles it
+    });
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+    // Cleanup subscription on unmount
+    return () => subscription.unsubscribe();
+  }, []);
 
-  /*
-   * To keep the template simple and small we're adding padding to prevent view
-   * from rendering under the System UI.
-   * For bigger apps the reccomendation is to use `react-native-safe-area-context`:
-   * https://github.com/AppAndFlow/react-native-safe-area-context
-   *
-   * You can read more about it here:
-   * https://github.com/react-native-community/discussions-and-proposals/discussions/827
-   */
-  const safePadding = '5%';
+  if (loading) {
+    // Optionally return a loading spinner component here
+    return null;
+  }
 
   return (
-    <View style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        style={backgroundStyle}>
-        <View style={{paddingRight: safePadding}}>
-          <Header/>
-        </View>
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-            paddingHorizontal: safePadding,
-            paddingBottom: safePadding,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </View>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <Stack.Navigator>
+          {session && session.user ? (
+            // User is signed in - Show Home screen
+            <Stack.Screen
+              name="Home"
+              component={HomeScreen}
+              options={{ title: 'QR Scanner Home' }} // Example title
+              initialParams={{ session: session }} // Pass session to Home
+            />
+          ) : (
+            // No user session - Show Auth screen
+            <Stack.Screen
+              name="Auth"
+              component={AuthScreen}
+              options={{ headerShown: false }} // Hide header for Auth screen
+            />
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
-}
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+};
 
 export default App;
