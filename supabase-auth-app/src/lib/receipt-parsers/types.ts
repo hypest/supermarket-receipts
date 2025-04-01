@@ -1,5 +1,3 @@
-import * as cheerio from 'cheerio';
-
 // Standardized output structure for all parsers
 export interface ParsedReceiptData {
   headerInfo: {

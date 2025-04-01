@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { SupabaseClient } from '@supabase/supabase-js'; // Import SupabaseClient type
 import { createClient } from '@/supabase/server';
 import { getParserForUrl } from '@/lib/receipt-parsers'; // Import the registry function
 import { ParsedReceiptData } from '@/lib/receipt-parsers/types'; // Import the shared type
@@ -18,21 +19,28 @@ interface ScannedUrlPayload {
 }
 
 // Helper function to update job status
-// Reverted errorMessage type to allow null/undefined explicitly
-async function updateJobStatus(supabase: any, jobId: string, status: 'processing' | 'completed' | 'failed', errorMessage?: string | null) {
-  const updateData: any = {
+// Making errorMessage strictly string | undefined
+// Added type for supabase client
+async function updateJobStatus(supabase: SupabaseClient, jobId: string, status: 'processing' | 'completed' | 'failed', errorMessage?: string) {
+  // Define type for updateData
+   const updateData: {
+      status: string;
+      updated_at: string;
+      last_attempted_at?: string;
+      error_message?: string | null;
+   } = {
     status: status,
     updated_at: new Date().toISOString(),
   };
   if (status === 'processing') {
     updateData.last_attempted_at = new Date().toISOString();
   }
-  // Only set error_message field if status is 'failed' and a non-null/non-undefined message is provided
-  if (status === 'failed' && errorMessage != null) { // Check against null AND undefined
+  // Only set error_message field if status is 'failed' and a message string is provided
+  if (status === 'failed' && errorMessage) {
     updateData.error_message = errorMessage;
   } else if (status === 'failed') {
-    // Explicitly set to null in DB if status is failed but no message provided (optional, depends on desired DB state)
-     updateData.error_message = null; // Let's explicitly set null if no message
+    // Set to null if status is failed but no message provided
+     updateData.error_message = null;
   }
   const { error } = await supabase.from('receipt_processing_jobs').update(updateData).eq('id', jobId);
   if (error) console.error(`Failed to update job ${jobId} status to ${status}:`, error);
@@ -111,7 +119,8 @@ export async function POST(req: NextRequest) {
 
     // 3. Execute the parser (handles fetching and parsing internally)
     console.log(`Job ${jobId!}: Delegating parsing to selected parser...`);
-    const parsedData: ParsedReceiptData = await parser.parse(urlToFetch, jobId);
+    // Add non-null assertion to jobId being passed to parser.parse
+    const parsedData: ParsedReceiptData = await parser.parse(urlToFetch, jobId!);
     console.log(`Job ${jobId!}: Parser returned ${parsedData.items.length} items.`);
 
     // Check if parser returned meaningful data (optional, depends on parser implementation)
@@ -168,18 +177,19 @@ export async function POST(req: NextRequest) {
     }
 
     // 6. Update job status to 'completed'
-    await updateJobStatus(supabase, jobId!, 'completed', null); // Pass null or undefined when no error
+    await updateJobStatus(supabase, jobId!, 'completed', undefined); // Pass undefined when no error
     return NextResponse.json({ success: true, message: `Processed ${parsedData.items.length} items`, receiptId: receiptId }, { status: 200 });
 
-  } catch (error: any) {
+  } catch (error: unknown) { // Use unknown for caught errors
     const logJobId = jobId ?? 'N/A';
     console.error(`Job ${logJobId}: Unhandled error processing URL ${urlToFetch}:`, error);
+    // Type guard for error message extraction
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred during processing.';
 
     // Update job status to 'failed' if we have a job ID
     if (jobId) { // Check if jobId is not null before using it
-      // Explicitly cast errorMessage to satisfy the compiler if needed
-      await updateJobStatus(supabase, jobId, 'failed', errorMessage as (string | null | undefined));
+      // Pass the determined string errorMessage. The function signature allows string | null | undefined.
+      await updateJobStatus(supabase, jobId, 'failed', errorMessage);
     } else {
       // Error occurred before job creation or retrieval
       console.error(`Processing failed before job could be confirmed for scanned_url_id ${scannedUrlId}. Error: ${errorMessage}`);
