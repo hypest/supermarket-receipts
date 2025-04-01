@@ -105,6 +105,7 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
+    implementation(libs.play.services.code.scanner)
     kapt(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     kaptAndroidTest(libs.hilt.compiler) // Hilt compiler for Android tests
@@ -126,8 +127,8 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
 
-    // ML Kit Barcode Scanning
-    implementation(libs.mlkit.barcode.scanning)
+    // ML Kit Barcode Scanning (Removed - Using Google Code Scanner instead)
+    // implementation(libs.mlkit.barcode.scanning)
 
     // Testing
     testImplementation(libs.junit)
