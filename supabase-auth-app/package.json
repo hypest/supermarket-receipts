@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@sparticuz/chromium": "^133.0.0",
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/ssr": "^0.6.1",
@@ -17,7 +18,7 @@
     "cheerio": "^1.0.0",
     "html5-qrcode": "^2.3.8",
     "next": "15.2.4",
-    "puppeteer": "^24.5.0",
+    "puppeteer-core": "^24.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

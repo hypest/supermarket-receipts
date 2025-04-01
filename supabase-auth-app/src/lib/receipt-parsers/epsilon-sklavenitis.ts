@@ -1,4 +1,5 @@
-import puppeteer, { Browser, Page } from 'puppeteer'; // Import Page type
+import puppeteer, { Browser, Page } from 'puppeteer-core'; // Use puppeteer-core
+import chromium from '@sparticuz/chromium'; // Import chromium for serverless
 import * as cheerio from 'cheerio';
 import { ReceiptParser, ParsedReceiptData } from './types';
 
@@ -6,17 +7,16 @@ import { ReceiptParser, ParsedReceiptData } from './types';
 let browserInstance: Browser | null = null;
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance || !browserInstance.isConnected()) {
-    console.log('Launching new Puppeteer browser instance...');
+    console.log('Launching new Puppeteer browser instance for serverless...');
+    // Use @sparticuz/chromium for executable path and args
     browserInstance = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu', // Often helps in server environments
-      ],
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless, // Use chromium.headless value
+      // ignoreHTTPSErrors: true, // This option belongs in page.goto, not launch
     });
-    console.log('Puppeteer browser launched.');
+    console.log('Puppeteer browser launched with @sparticuz/chromium.');
   }
   return browserInstance;
 }
@@ -83,22 +83,31 @@ const epsilonSklavenitisParser: ReceiptParser = {
 
     } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error(`${logPrefix}Error during Puppeteer navigation/rendering for ${url}: ${errorMsg}`);
+      console.error(`${logPrefix}Error during Puppeteer navigation/rendering for ${url}: ${errorMsg}`, error); // Use the error variable
+      // Attempt to close browser even if page navigation failed
+      if (page) {
+          try { await page.close(); } catch { /* ignore closing error if main error occurred */ }
+      }
+      await closeBrowserInstance(); // Ensure browser is closed on error
       throw new Error(`Puppeteer failed for Epsilon/Sklavenitis URL: ${errorMsg}`);
     } finally {
       if (page) {
         try {
             await page.close();
             console.log(`${logPrefix}Puppeteer page closed.`);
-        } catch (closeError) {
-            console.error(`${logPrefix}Error closing Puppeteer page: ${closeError instanceof Error ? closeError.message : String(closeError)}`);
+        } catch (_closeError) { // Prefix and use the variable
+            console.error(`${logPrefix}Error closing Puppeteer page: ${_closeError instanceof Error ? _closeError.message : String(_closeError)}`, _closeError);
         }
       }
-      // Note: Browser instance is kept open for potential reuse by subsequent jobs
+      // Note: Browser instance is kept open for potential reuse by subsequent jobs unless an error occurred
     }
 
     if (!pageContent) {
-      throw new Error(`${logPrefix}Failed to retrieve page content using Puppeteer.`);
+      // This might happen if the waitForSelector timed out and we didn't throw, but content() failed.
+      console.warn(`${logPrefix}Failed to retrieve page content using Puppeteer, possibly due to rendering timeout.`);
+      // Return minimal data or throw, depending on desired behavior
+       return { headerInfo, items }; // Return minimal data
+      // throw new Error(`${logPrefix}Failed to retrieve page content using Puppeteer.`);
     }
 
     // --- Parse the RENDERED HTML using Cheerio ---
