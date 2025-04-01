@@ -1,11 +1,13 @@
 import { ReceiptParser } from './types';
 import entersoftParser from './entersoft';
+import epsilonSklavenitisParser from './epsilon-sklavenitis'; // Import the new parser
 // Import other parsers here as they are created
 // import anotherProviderParser from './anotherProvider';
 
 // Map hostnames (or parts of hostnames) to parser modules
 const parserRegistry: { [key: string]: ReceiptParser } = {
   'e-invoicing.gr': entersoftParser,
+  'epsilondigital-sklavenitis.epsilonnet.gr': epsilonSklavenitisParser, // Add the new entry
   // 'www.anotherprovider.com': anotherProviderParser,
 };
 
