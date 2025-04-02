@@ -1,1 +1,5 @@
 .vercel
+
+# Supabase
+**/supabase/.branches
+**/supabase/.temp
