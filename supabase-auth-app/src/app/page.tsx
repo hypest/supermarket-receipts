@@ -1,5 +1,6 @@
 import { createClient } from '@/supabase/server';
 import { redirect } from 'next/navigation';
+import Link from 'next/link'; // Import Link for navigation
 import QrScanner from '@/components/QrScanner'; // Import the scanner component
 
 export default async function Home() {
@@ -34,6 +35,13 @@ export default async function Home() {
             Sign Out
           </button>
         </form>
+
+        {/* Link to Receipts Page */}
+        <div className="mt-4">
+          <Link href="/receipts" className="px-4 py-2 font-semibold text-white bg-green-500 rounded hover:bg-green-700">
+              View My Receipts
+          </Link>
+        </div>
 
         {/* Conditionally render QrScanner if user is logged in */}
         {data.user && <QrScanner userId={data.user.id} />}
