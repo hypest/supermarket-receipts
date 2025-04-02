@@ -19,7 +19,7 @@ class ReceiptRepositoryImpl @Inject constructor(
     // Use the 'postgrest' extension property from v3
     private val postgrest = supabaseClient.postgrest
 
-    // Updated function signature and implementation
+    // Implementation for submitting URL and HTML
     override suspend fun submitReceiptData(url: String, htmlContent: String, userId: String): Result<Unit> {
         return try {
             // Create Receipt object including htmlContent
@@ -31,6 +31,22 @@ class ReceiptRepositoryImpl @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e(TAG, "Error submitting receipt data for user $userId", e)
+            Result.failure(e)
+        }
+    }
+
+    // Implementation for saving only the URL
+    override suspend fun saveReceiptUrl(url: String, userId: String): Result<Unit> {
+        return try {
+            // Create Receipt object without htmlContent
+            val receipt = Receipt(url = url, user_id = userId) // htmlContent will be null by default
+            Log.d(TAG, "Attempting to save receipt URL only: $receipt")
+            // Insert using the v3 API
+            postgrest[TABLE_NAME].insert(receipt)
+            Log.d(TAG, "Receipt URL saved successfully for user $userId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving receipt URL for user $userId", e)
             Result.failure(e)
         }
     }

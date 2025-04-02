@@ -64,10 +64,18 @@ class MainViewModel @Inject constructor(
 
     // Called by the QrCodeScanner component when a code is successfully scanned
     fun onQrCodeScanned(url: String) {
-        // Transition to ExtractingHtml state to trigger the WebView
-        Log.d("MainViewModel", "QR Code scanned, transitioning to ExtractingHtml state for URL: $url")
-        _screenState.value = MainScreenState.ExtractingHtml(url)
-        // The actual processing will be triggered by onHtmlExtracted
+        Log.d("MainViewModel", "QR Code scanned: $url")
+        // Decide whether to extract HTML based on URL
+        if (shouldExtractHtmlForUrl(url)) {
+            Log.d("MainViewModel", "Transitioning to ExtractingHtml state for URL: $url")
+            _screenState.value = MainScreenState.ExtractingHtml(url)
+            // Actual processing triggered by onHtmlExtracted
+        } else {
+            Log.d("MainViewModel", "Skipping HTML extraction, transitioning directly to Processing state for URL: $url")
+            // For providers like Entersoft, process immediately without HTML
+            _screenState.value = MainScreenState.Processing(url, null) // Pass null for HTML
+            processScannedData(url, null) // Call processing function directly
+        }
     }
 
     // Called by HtmlExtractorWebView when HTML is ready (or if extraction failed)
@@ -77,12 +85,14 @@ class MainViewModel @Inject constructor(
             _screenState.value = MainScreenState.Error("Failed to extract HTML content from the receipt page.")
             return
         }
-
         Log.d("MainViewModel", "HTML extracted (length: ${html.length}), transitioning to Processing state for URL: $url")
-        // Transition to Processing state, now including the HTML
-        _screenState.value = MainScreenState.Processing(url, html)
+        _screenState.value = MainScreenState.Processing(url, html) // Pass extracted HTML
+        processScannedData(url, html) // Call processing function with HTML
+    }
 
-        viewModelScope.launch {
+    // Central function to handle submitting data to the repository
+    private fun processScannedData(url: String, html: String?) {
+         viewModelScope.launch {
             val userId = authRepository.getCurrentUserId()
             if (userId == null) {
                 Log.e("MainViewModel", "User not logged in, cannot save receipt.")
@@ -90,16 +100,21 @@ class MainViewModel @Inject constructor(
                 return@launch
             }
 
-            Log.d("MainViewModel", "Attempting to submit URL and HTML for processing: $url for user: $userId")
-            // Call the updated repository function
-            val result = receiptRepository.submitReceiptData(url, html, userId)
+            Log.d("MainViewModel", "Processing receipt data: URL=$url, HasHTML=${html != null}, User=$userId")
+
+            // Choose repository function based on whether HTML was extracted
+            val result = if (html != null) {
+                receiptRepository.submitReceiptData(url, html, userId)
+            } else {
+                receiptRepository.saveReceiptUrl(url, userId)
+            }
 
             result.onSuccess {
-                Log.d("MainViewModel", "Receipt data submitted successfully for URL: $url")
+                Log.d("MainViewModel", "Receipt data processed successfully for URL: $url")
                 _screenState.value = MainScreenState.Success
             }.onFailure { error ->
-                Log.e("MainViewModel", "Error submitting receipt data for URL: $url", error)
-                _screenState.value = MainScreenState.Error(error.message ?: "Failed to submit receipt data.")
+                Log.e("MainViewModel", "Error processing receipt data for URL: $url", error)
+                _screenState.value = MainScreenState.Error(error.message ?: "Failed to process receipt data.")
             }
         }
     }
@@ -125,6 +140,33 @@ class MainViewModel @Inject constructor(
         Log.e("MainViewModel", "HTML extraction error for URL $url: $error")
         _screenState.value = MainScreenState.Error("Failed to extract HTML: $error")
          // Consider going back to ReadyToScan automatically or require user action
+     }
+
+     // Helper function to decide if WebView extraction is needed using Regex
+     private fun shouldExtractHtmlForUrl(url: String): Boolean {
+         return try {
+             val hostname = java.net.URL(url).host.lowercase() // Use lowercase for case-insensitive match
+
+             // Define regex patterns for providers requiring client-side extraction
+             // Currently targets any subdomain ending in .epsilonnet.gr
+             val clientSideExtractionPatterns = listOf(
+                 Regex(""".*\.epsilonnet\.gr$""")
+                 // Add Regex(""".*\.another-provider\.com/path/.*""") etc. if needed later
+             )
+
+             val needsExtraction = clientSideExtractionPatterns.any { pattern -> pattern.matches(hostname) }
+
+             if (needsExtraction) {
+                 Log.d("MainViewModel", "URL $url matches client-side extraction pattern.")
+             } else {
+                 Log.d("MainViewModel", "URL $url does NOT match client-side extraction pattern (will use backend fetching).")
+             }
+             needsExtraction
+
+         } catch (e: Exception) {
+             Log.w("MainViewModel", "Could not parse URL hostname or match regex for: $url", e)
+             false // Default to not extracting if URL is invalid or regex fails
+         }
      }
 
     // Called by HtmlExtractorWebView if it detects a persistent challenge page
