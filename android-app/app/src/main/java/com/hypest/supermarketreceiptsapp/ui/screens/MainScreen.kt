@@ -3,14 +3,17 @@ package com.hypest.supermarketreceiptsapp.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.animation.AnimatedVisibility
+import android.os.Build // Import Build for SDK version check
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur // Import blur modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview // Import Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -111,29 +114,38 @@ fun MainScreen(
                 is MainScreenState.ExtractingHtml -> {
                     // Box to hold WebView and potential overlay
                     Box(modifier = Modifier.fillMaxSize()) {
+                        // Apply blur conditionally to the WebView itself when overlay is shown
+                        val webViewModifier = if (state.showOverlay && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            Modifier.fillMaxSize().blur(radius = 8.dp)
+                        } else {
+                            Modifier.fillMaxSize()
+                        }
                         HtmlExtractorWebView(
                             url = state.url,
                             onHtmlExtracted = { url, html -> mainViewModel.onHtmlExtracted(url, html) },
                             onError = { url, error -> mainViewModel.onHtmlExtractionError(url, error) },
-                            onChallengeInteractionRequired = { mainViewModel.onChallengeInteractionRequired() }, // Pass new callback
-                            modifier = Modifier.fillMaxSize() // WebView fills the Box
+                            onChallengeInteractionRequired = { mainViewModel.onChallengeInteractionRequired() },
+                            modifier = webViewModifier // Apply conditional modifier
                         )
 
-                        // Semi-transparent overlay, shown/hidden based on state flag
+                        // Semi-transparent overlay (without blur), shown/hidden based on state flag
                         AnimatedVisibility(
                             visible = state.showOverlay,
                             enter = fadeIn(),
                             exit = fadeOut()
                         ) {
+                            // Simple overlay Box - no blur here
                             Box(
                                 modifier = Modifier
-                                    .matchParentSize()
-                                    .background(Color.Black.copy(alpha = 0.5f)) // Semi-transparent black
-                                    .fillMaxSize(), // overlay fills the Box
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.5f)), // Semi-transparent background
                                 contentAlignment = Alignment.Center
                             ) {
                                 // Show loading indicator on top of the overlay
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center // Explicitly center vertically
+                                ) {
                                     CircularProgressIndicator(color = Color.White)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text("Loading receipt...", color = Color.White)
