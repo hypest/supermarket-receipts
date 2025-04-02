@@ -14,13 +14,14 @@ import javax.inject.Inject
 
 // Unified state representation for the Main Screen
 sealed class MainScreenState {
-    object CheckingPermission : MainScreenState() // Initial state
+    object CheckingPermission : MainScreenState()
     data class NoPermission(val message: String) : MainScreenState()
-    object ReadyToScan : MainScreenState() // Permission granted, show "Scan" button
-    object Scanning : MainScreenState() // Scanner UI should be active/launched
-    data class Processing(val url: String) : MainScreenState() // Saving URL
-    object Success : MainScreenState() // Save successful
-    data class Error(val message: String) : MainScreenState() // General error state
+    object ReadyToScan : MainScreenState()
+    object Scanning : MainScreenState()
+    data class ExtractingHtml(val url: String) : MainScreenState() // State for WebView extraction
+    data class Processing(val url: String, val html: String?) : MainScreenState() // Include optional HTML
+    object Success : MainScreenState()
+    data class Error(val message: String) : MainScreenState()
 }
 
 @HiltViewModel
@@ -62,8 +63,24 @@ class MainViewModel @Inject constructor(
 
     // Called by the QrCodeScanner component when a code is successfully scanned
     fun onQrCodeScanned(url: String) {
-        // Transition to Processing state immediately
-        _screenState.value = MainScreenState.Processing(url)
+        // Transition to ExtractingHtml state to trigger the WebView
+        Log.d("MainViewModel", "QR Code scanned, transitioning to ExtractingHtml state for URL: $url")
+        _screenState.value = MainScreenState.ExtractingHtml(url)
+        // The actual processing will be triggered by onHtmlExtracted
+    }
+
+    // Called by HtmlExtractorWebView when HTML is ready (or if extraction failed)
+    fun onHtmlExtracted(url: String, html: String?) {
+        if (html == null) {
+            Log.e("MainViewModel", "HTML extraction failed for URL: $url")
+            _screenState.value = MainScreenState.Error("Failed to extract HTML content from the receipt page.")
+            return
+        }
+
+        Log.d("MainViewModel", "HTML extracted (length: ${html.length}), transitioning to Processing state for URL: $url")
+        // Transition to Processing state, now including the HTML
+        _screenState.value = MainScreenState.Processing(url, html)
+
         viewModelScope.launch {
             val userId = authRepository.getCurrentUserId()
             if (userId == null) {
@@ -72,14 +89,16 @@ class MainViewModel @Inject constructor(
                 return@launch
             }
 
-            Log.d("MainViewModel", "Attempting to save URL: $url for user: $userId")
-            val result = receiptRepository.saveReceiptUrl(url, userId)
+            Log.d("MainViewModel", "Attempting to submit URL and HTML for processing: $url for user: $userId")
+            // Call the updated repository function
+            val result = receiptRepository.submitReceiptData(url, html, userId)
+
             result.onSuccess {
-                Log.d("MainViewModel", "URL saved successfully: $url")
+                Log.d("MainViewModel", "Receipt data submitted successfully for URL: $url")
                 _screenState.value = MainScreenState.Success
             }.onFailure { error ->
-                Log.e("MainViewModel", "Error saving URL: $url", error)
-                _screenState.value = MainScreenState.Error(error.message ?: "Failed to save URL.")
+                Log.e("MainViewModel", "Error submitting receipt data for URL: $url", error)
+                _screenState.value = MainScreenState.Error(error.message ?: "Failed to submit receipt data.")
             }
         }
     }
@@ -99,6 +118,13 @@ class MainViewModel @Inject constructor(
          _screenState.value = MainScreenState.Error("Scanner error: ${exception.message ?: "Unknown scanner issue"}")
          // Consider transitioning back to ReadyToScan after a delay or let user click "Try Again"
      }
+
+    // Called by HtmlExtractorWebView if it encounters an error
+    fun onHtmlExtractionError(url: String, error: String) {
+        Log.e("MainViewModel", "HTML extraction error for URL $url: $error")
+        _screenState.value = MainScreenState.Error("Failed to extract HTML: $error")
+        // Consider going back to ReadyToScan automatically or require user action
+    }
 
 
     // Called when user clicks "Scan Another" or "Try Again"

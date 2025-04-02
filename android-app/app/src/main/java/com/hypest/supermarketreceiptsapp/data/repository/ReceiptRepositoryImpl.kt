@@ -19,17 +19,18 @@ class ReceiptRepositoryImpl @Inject constructor(
     // Use the 'postgrest' extension property from v3
     private val postgrest = supabaseClient.postgrest
 
-    override suspend fun saveReceiptUrl(url: String, userId: String): Result<Unit> {
+    // Updated function signature and implementation
+    override suspend fun submitReceiptData(url: String, htmlContent: String, userId: String): Result<Unit> {
         return try {
-            // Ensure Receipt class has @Serializable annotation
-            val receipt = Receipt(url = url, user_id = userId)
-            Log.d(TAG, "Attempting to save receipt: $receipt")
+            // Create Receipt object including htmlContent
+            val receiptData = Receipt(url = url, user_id = userId, htmlContent = htmlContent)
+            Log.d(TAG, "Attempting to submit receipt data: URL=$url, HTML Length=${htmlContent.length}, User=$userId")
             // Insert using the v3 API
-            postgrest[TABLE_NAME].insert(receipt) // Check if serialization needs explicit configuration
-            Log.d(TAG, "Receipt saved successfully for user $userId")
+            postgrest[TABLE_NAME].insert(receiptData) // Supabase client handles serialization
+            Log.d(TAG, "Receipt data submitted successfully for user $userId")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Error saving receipt URL for user $userId", e)
+            Log.e(TAG, "Error submitting receipt data for user $userId", e)
             Result.failure(e)
         }
     }

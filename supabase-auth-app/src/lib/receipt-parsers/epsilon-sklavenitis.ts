@@ -1,84 +1,21 @@
-import puppeteer from 'puppeteer-extra'; // Use puppeteer-extra
-import StealthPlugin from 'puppeteer-extra-plugin-stealth'; // Import stealth plugin
-// Import Browser and Page types explicitly from puppeteer-core
-import { Browser, Page } from 'puppeteer-core';
-import chromium from '@sparticuz/chromium'; // Import chromium for serverless
+// NOTE: This parser now RELIES on the client (e.g., Android WebView)
+// to provide the fully rendered HTML content, as direct fetching/Puppeteer
+// is blocked by Cloudflare or too slow/unreliable in serverless.
+
 import * as cheerio from 'cheerio';
 import { ReceiptParser, ParsedReceiptData } from './types';
 
-// Apply the stealth plugin
-puppeteer.use(StealthPlugin());
-
-// --- Puppeteer Browser Management ---
-// Explicitly type browserInstance as Browser | null
-let browserInstance: Browser | null = null;
-// Add explicit return type Promise<Browser>
-async function getBrowser(): Promise<Browser> {
-  // Check if browserInstance exists and is connected
-  const isConnected = browserInstance && browserInstance.isConnected();
-  if (!browserInstance || !isConnected) {
-    if (browserInstance && !isConnected) {
-        console.log('Puppeteer browser instance disconnected. Closing...');
-        await closeBrowserInstance(); // Attempt to close cleanly before relaunching
-    }
-
-    if (process.env.VERCEL) {
-      // Vercel environment: Use @sparticuz/chromium
-      console.log('Launching Puppeteer-extra browser instance for Vercel...');
-      const executablePath = await chromium.executablePath();
-      console.log(`Using Chromium executable path: ${executablePath || 'default'}`);
-      browserInstance = await puppeteer.launch({ // puppeteer here is puppeteer-extra
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: executablePath,
-        headless: chromium.headless,
-      });
-      console.log('Puppeteer-extra browser launched with @sparticuz/chromium.');
-    } else {
-      // Local environment: Use standard puppeteer-core launch, specifying the Chrome channel
-      console.log('Launching Puppeteer-extra browser instance locally (using Chrome channel)...');
-      // Note: Ensure you have Google Chrome installed locally for this to work
-      browserInstance = await puppeteer.launch({ // puppeteer here is puppeteer-extra
-        channel: 'chrome', // Tell puppeteer-core to find local Chrome
-        headless: true, // Or false for debugging visually
-        args: ['--no-sandbox', '--disable-setuid-sandbox'] // Standard args
-      });
-      console.log('Puppeteer-extra browser launched locally.');
-    }
-  }
-  // Add a check to satisfy TypeScript's strict null checks
-  if (!browserInstance) {
-      throw new Error("Failed to launch or retrieve browser instance.");
-  }
-  return browserInstance;
-}
-
-async function closeBrowserInstance(): Promise<void> {
-    if (browserInstance) {
-        const instanceToClose = browserInstance; // Capture instance
-        browserInstance = null; // Set to null immediately
-        console.log('Closing Puppeteer browser instance...');
-        try {
-            await instanceToClose.close();
-            console.log('Puppeteer browser closed.');
-        } catch (closeError) {
-             console.error(`Error closing browser instance: ${closeError instanceof Error ? closeError.message : String(closeError)}`);
-        }
-    }
-}
-
-// Ensure browser is closed on exit signals
-process.on('SIGINT', closeBrowserInstance);
-process.on('SIGTERM', closeBrowserInstance);
-process.on('exit', closeBrowserInstance);
-// --- End Puppeteer Management ---
-
+// --- NO LONGER USING PUPPETEER IN THIS PARSER ---
+// Imports for puppeteer, chromium, Browser, Page are removed.
+// Browser management functions (getBrowser, closeBrowserInstance) are removed.
+// Process exit hooks are removed.
 
 // --- Parser Implementation ---
 const epsilonSklavenitisParser: ReceiptParser = {
-  parse: async (url: string, jobId?: string): Promise<ParsedReceiptData> => {
+  // Updated signature to accept optional htmlContent
+  parse: async (url: string, jobId?: string, htmlContent?: string): Promise<ParsedReceiptData> => {
     const logPrefix = jobId ? `Job ${jobId}: ` : '';
-    console.log(`${logPrefix}Using Epsilon/Sklavenitis Puppeteer-extra parser for URL: ${url}`);
+    console.log(`${logPrefix}Using Epsilon/Sklavenitis Cheerio-only parser for URL: ${url}`);
 
     const headerInfo: ParsedReceiptData['headerInfo'] = {
       receipt_date: null,
@@ -87,108 +24,29 @@ const epsilonSklavenitisParser: ReceiptParser = {
       uid: null,
     };
     const items: ParsedReceiptData['items'] = [];
-    let page: Page | null = null;
-    let pageContent: string = ''; // Initialize to empty string
-    let browser: Browser | null = null;
-    let isChallengeDetected = false; // Flag to track if challenge was detected
 
-    try {
-      browser = await getBrowser();
-      page = await browser.newPage();
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-      await page.setViewport({ width: 1280, height: 800 });
-
-      console.log(`${logPrefix}Navigating to ${url}...`);
-      await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-      console.log(`${logPrefix}Initial page navigation complete.`);
-
-      // --- Check for Cloudflare challenge ---
-      console.log(`${logPrefix}Checking for Cloudflare challenge (15s timeout)...`);
-      const challengeIframeSelector = 'iframe[src*="challenges.cloudflare.com"]';
-      try {
-          await page.waitForSelector(challengeIframeSelector, { timeout: 15000, visible: true });
-          console.warn(`${logPrefix}Cloudflare challenge detected (iframe found). Skipping detailed parsing.`);
-          isChallengeDetected = true;
-      } catch (timeoutError) {
-          // Timeout means the challenge iframe likely didn't appear quickly
-          console.log(`${logPrefix}No Cloudflare challenge iframe detected quickly.`);
-          isChallengeDetected = false;
-      }
-      // --- End Challenge Check ---
-
-      // Only wait for receipt content if no challenge was detected
-      if (!isChallengeDetected) {
-          const renderedContentSelector = 'div.doc-info__container';
-          console.log(`${logPrefix}Waiting for function to confirm selector "${renderedContentSelector}" exists (up to 80s)...`);
-          try {
-            await page.waitForFunction(
-              (selector) => document.querySelector(selector) !== null,
-              { timeout: 80000 },
-              renderedContentSelector
-            );
-            console.log(`${logPrefix}Rendered content confirmed via function.`);
-          } catch (waitError: unknown) {
-            const errorMsg = waitError instanceof Error ? waitError.message : String(waitError);
-            console.warn(`${logPrefix}Timeout or error waiting for selector "${renderedContentSelector}": ${errorMsg}. Page might not have rendered correctly or selector is wrong. Trying to get content anyway...`);
-            const screenshotPath = `/tmp/error_screenshot_${jobId || Date.now()}.png`;
-            try {
-                if (page) {
-                     await page.screenshot({ path: screenshotPath, fullPage: true });
-                     console.log(`${logPrefix}Screenshot saved to ${screenshotPath}`);
-                }
-            } catch (ssError) { console.error(`${logPrefix}Failed to take screenshot: ${ssError instanceof Error ? ssError.message : String(ssError)}`); }
-          }
-
-          // Extract content only if page exists
-          if (page) {
-            console.log(`${logPrefix}Extracting rendered HTML content...`);
-            pageContent = await page.content();
-            console.log(`${logPrefix}Extracted HTML content (length: ${pageContent?.length ?? 0})`);
-          } else {
-             console.warn(`${logPrefix}Page object was unexpectedly null, cannot extract content.`);
-             pageContent = ''; // Ensure pageContent is string
-          }
-      } else {
-          // If challenge detected, ensure pageContent remains empty
-          pageContent = '';
-          console.log(`${logPrefix}Skipping content extraction due to Cloudflare challenge.`);
-      }
-
-    } catch (error: unknown) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error(`${logPrefix}Error during Puppeteer navigation/rendering for ${url}: ${errorMsg}`, error);
-      if (page) {
-          try { await page.close(); } catch { /* ignore */ }
-      }
-      // Don't close the shared browser instance on error here
-      throw new Error(`Puppeteer failed for Epsilon/Sklavenitis URL: ${errorMsg}`);
-    } finally {
-      if (page) {
-        try {
-            await page.close();
-            console.log(`${logPrefix}Puppeteer page closed.`);
-        } catch (_closeError) {
-            console.error(`${logPrefix}Error closing Puppeteer page: ${_closeError instanceof Error ? _closeError.message : String(_closeError)}`);
-        }
-      }
+    // Check if HTML content was provided by the client
+    if (!htmlContent) {
+        console.error(`${logPrefix}HTML content is required for Epsilon/Sklavenitis parser but was not provided.`);
+        // Option 1: Throw an error to mark the job as failed clearly
+        throw new Error("HTML content required for this parser was not provided by the client.");
+        // Option 2: Return empty data with a warning (less explicit failure)
+        // console.warn(`${logPrefix}HTML content not provided. Returning minimal data.`);
+        // return { headerInfo, items };
     }
 
-    // Only proceed with parsing if content was retrieved AND no challenge was detected
-    if (!pageContent || isChallengeDetected) {
-      console.warn(`${logPrefix}Failed to retrieve page content or Cloudflare challenge detected. Returning minimal data.`);
-       return { headerInfo, items }; // Return minimal data
-    }
-
-    // --- Parse the RENDERED HTML using Cheerio ---
-    console.log(`${logPrefix}Parsing rendered HTML with Cheerio...`);
-    const $ = cheerio.load(pageContent);
+    // --- Parse the PROVIDED HTML using Cheerio ---
+    console.log(`${logPrefix}Parsing provided HTML content (length: ${htmlContent.length}) with Cheerio...`);
+    const $ = cheerio.load(htmlContent);
 
     // --- Extract Data using confirmed selectors ---
+    // (Keep the extraction logic as determined previously from the rendered HTML)
+
     // Date
     try {
         const dateElement = $('span#issue-date');
-        const dateText = dateElement.text().trim();
-        const dateMatch = dateText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        const dateText = dateElement.text().trim(); // e.g., "22/03/2025 12:30"
+        const dateMatch = dateText.match(/(\d{2})\/(\d{2})\/(\d{4})/); // Extract DD/MM/YYYY part
         if (dateMatch && dateMatch.length === 4) {
             const [, day, month, year] = dateMatch;
             const utcDate = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
@@ -200,10 +58,13 @@ const epsilonSklavenitisParser: ReceiptParser = {
 
     // Total Amount
     try {
-        const totalValue = $('input#gross-value').val();
+        // IMPORTANT: The total is in an INPUT field in the rendered HTML.
+        // Cheerio cannot get the '.val()' of an input like jQuery.
+        // We need to get the 'value' ATTRIBUTE.
+        const totalValue = $('input#gross-value').attr('value'); // Get 'value' attribute
         if (totalValue) {
             headerInfo.total_amount = parseFloat(totalValue) || null;
-        } else { console.warn(`${logPrefix}Could not find value for total amount input#gross-value`); }
+        } else { console.warn(`${logPrefix}Could not find value attribute for total amount input#gross-value`); }
     } catch (e) { console.error(`${logPrefix}Error parsing total amount: ${e instanceof Error ? e.message : String(e)}`); }
 
     // UID
@@ -257,7 +118,7 @@ const epsilonSklavenitisParser: ReceiptParser = {
     console.log(`${logPrefix}Parsed ${items.length} items.`);
 
     if (items.length === 0 && !headerInfo.total_amount && !headerInfo.receipt_date && !headerInfo.uid) {
-      console.warn(`${logPrefix}Puppeteer parsing yielded no significant data from ${url}. Check selectors and page rendering.`);
+      console.warn(`${logPrefix}Parsing provided HTML yielded no significant data from ${url}. Check selectors and HTML source.`);
     }
 
     return { headerInfo, items };
@@ -265,5 +126,5 @@ const epsilonSklavenitisParser: ReceiptParser = {
 };
 
 export default epsilonSklavenitisParser;
-// Export closeBrowser function if needed elsewhere (e.g., for graceful shutdown in main app)
-export { closeBrowserInstance as closeEpsilonSklavenitisBrowser };
+// Remove exported closeBrowser function as Puppeteer is no longer used here
+// export { closeBrowserInstance as closeEpsilonSklavenitisBrowser };

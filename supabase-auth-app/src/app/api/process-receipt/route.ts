@@ -15,10 +15,11 @@ interface ScannedUrlPayload {
   table: 'scanned_urls';
   schema: 'public';
   record: {
-    id: number; // bigint/int8
+    id: number;
     url: string;
-    user_id: string; // uuid
+    user_id: string;
     created_at: string;
+    html_content?: string | null; // Add optional html_content field
   };
   old_record: null;
 }
@@ -87,10 +88,11 @@ export async function POST(req: NextRequest) {
   // Validate payload
   if (payload.type !== 'INSERT' || payload.table !== 'scanned_urls' || !payload.record?.id || !payload.record?.url || !payload.record?.user_id) {
     console.warn('Ignoring invalid or non-INSERT event:', payload);
-    return NextResponse.json({ message: 'Ignoring invalid event' }, { status: 200 });
+     return NextResponse.json({ message: 'Ignoring invalid event' }, { status: 200 });
   }
 
-  const { id: scannedUrlId, url: urlToFetch, user_id: userId } = payload.record;
+  // Extract data from payload, including the new html_content
+  const { id: scannedUrlId, url: urlToFetch, user_id: userId, html_content: htmlContent } = payload.record;
   let jobId: string | null = null;
 
   try {
@@ -123,13 +125,14 @@ export async function POST(req: NextRequest) {
       throw new Error(`No suitable parser found for URL host: ${new URL(urlToFetch).hostname}`);
     }
 
-    // 3. Execute the parser (handles fetching and parsing internally)
+    // 3. Execute the parser
     console.log(`Job ${jobId!}: Delegating parsing to selected parser...`);
-    // Add non-null assertion to jobId being passed to parser.parse
-    const parsedData: ParsedReceiptData = await parser.parse(urlToFetch, jobId!);
+    // Pass URL, optional HTML content, and Job ID to the parser
+    const parsedData: ParsedReceiptData = await parser.parse(urlToFetch, jobId!, htmlContent ?? undefined); // Pass htmlContent if available
     console.log(`Job ${jobId!}: Parser returned ${parsedData.items.length} items.`);
 
     // Check if parser returned meaningful data (optional, depends on parser implementation)
+    // Keep existing check, as even with HTML, parsing might yield nothing significant
     if (parsedData.items.length === 0 && !parsedData.headerInfo.total_amount && !parsedData.headerInfo.store_name) {
          const failMsg = 'Parser returned no significant data.';
          console.warn(`Job ${jobId!}: ${failMsg} Marking as failed.`);

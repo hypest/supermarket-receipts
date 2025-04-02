@@ -16,8 +16,10 @@ export interface ParsedReceiptData {
 
 // Interface for a receipt parser module
 export interface ReceiptParser {
-  // Takes the URL of the receipt page and returns the parsed data
-  // It should handle fetching, iframe detection (if necessary), and parsing
-  // Throws an error if parsing fails critically
-  parse: (url: string, jobId?: string) => Promise<ParsedReceiptData>;
+  // Takes the URL and optionally the pre-fetched HTML content of the receipt page
+  // and returns the parsed data.
+  // If htmlContent is provided, the parser should use it directly.
+  // Otherwise, it should fetch the content from the URL.
+  // Throws an error if parsing fails critically.
+  parse: (url: string, jobId?: string, htmlContent?: string) => Promise<ParsedReceiptData>;
 }

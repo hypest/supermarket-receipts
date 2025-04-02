@@ -1,5 +1,5 @@
 // Simple script to test a specific parser locally
-import epsilonSklavenitisParser, { closeEpsilonSklavenitisBrowser } from './src/lib/receipt-parsers/epsilon-sklavenitis'; // Remove extension
+import epsilonSklavenitisParser from './src/lib/receipt-parsers/epsilon-sklavenitis'; // Remove extension, remove closeBrowser import
 import { ParsedReceiptData } from './src/lib/receipt-parsers/types'; // Remove extension
 
 const testUrl = 'https://epsilondigital-sklavenitis.epsilonnet.gr/FileDocument/Get/c75d537f-be8f-4118-2aa3-08dd626fe4d1';
@@ -18,8 +18,8 @@ async function runTest() {
     console.error(error);
     console.log('---------------------\n');
   } finally {
-    // Ensure the browser instance is closed after the test
-    await closeEpsilonSklavenitisBrowser();
+    // No browser to close for this parser anymore
+    console.log('Test finished.');
   }
 }
 

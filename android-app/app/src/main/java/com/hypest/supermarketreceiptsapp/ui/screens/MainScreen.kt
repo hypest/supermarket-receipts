@@ -8,9 +8,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle // Use lifecycle-aware collection
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.hypest.supermarketreceiptsapp.navigation.Screen
+import com.hypest.supermarketreceiptsapp.ui.components.HtmlExtractorWebView // Import the new WebView component
 import com.hypest.supermarketreceiptsapp.ui.components.QrCodeScanner
 import com.hypest.supermarketreceiptsapp.ui.components.RequestCameraPermission
 import com.hypest.supermarketreceiptsapp.viewmodel.AuthViewModel
@@ -100,24 +101,40 @@ fun MainScreen(
                     // The QrCodeScanner is launched via the side-effect above.
                     // We might show a subtle background or placeholder here,
                     // but the scanner UI itself takes over.
-                    // Text("Launching Scanner...") // Or just an empty Box
+                    // Text("Launching Scanner...")
                 }
-                is MainScreenState.Processing -> {
-                    // Show loading indicator while saving
+                is MainScreenState.ExtractingHtml -> {
+                    // Show loading indicator and the hidden WebView
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Saving URL...")
+                        Text("Extracting receipt details...")
+
+                        // Render the WebView, but keep it hidden
+                        HtmlExtractorWebView(
+                            url = state.url,
+                            onHtmlExtracted = { url, html -> mainViewModel.onHtmlExtracted(url, html) },
+                            onError = { url, error -> mainViewModel.onHtmlExtractionError(url, error) },
+                            modifier = Modifier.size(0.dp) // Hide the WebView
+                        )
+                    }
+                }
+                is MainScreenState.Processing -> {
+                    // Show loading indicator while submitting data
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Processing receipt...") // Updated text
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { authViewModel.signOut() }, enabled = false) { // Disable logout during processing?
-                            Text("Logout")
+                        Button(onClick = { authViewModel.signOut() }, enabled = false) {
+                            Text("Logout") // Keep logout disabled
                         }
                     }
                 }
                 MainScreenState.Success -> {
                     // Show success message, "Scan Another", and Logout buttons
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("URL Saved Successfully!")
+                        Text("Receipt Processed Successfully!") // Updated text
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(onClick = { mainViewModel.resetToReadyState() }) {
                             Text("Scan Another")

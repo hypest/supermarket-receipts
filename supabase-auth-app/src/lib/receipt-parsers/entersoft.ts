@@ -3,43 +3,84 @@ import * as cheerio from 'cheerio';
 import { ReceiptParser, ParsedReceiptData } from './types';
 
 const entersoftParser: ReceiptParser = {
-  parse: async (url: string, jobId?: string): Promise<ParsedReceiptData> => {
+  // Update signature to accept optional htmlContent
+  parse: async (url: string, jobId?: string, htmlContent?: string): Promise<ParsedReceiptData> => {
     const logPrefix = jobId ? `Job ${jobId}: ` : '';
     console.log(`${logPrefix}Using Entersoft parser for URL: ${url}`);
 
-    // 1. Fetch the initial webpage content to find the iframe
-    console.log(`${logPrefix}Fetching initial URL: ${url}`);
-    const initialResponse = await axios.get<string>(url, { // Specify expected response type as string
+    let initialHtml: string;
+    let iframeSrc: string | undefined;
+    let iframeUrl: string;
+    let receiptHtml: string;
+
+    if (htmlContent) {
+        // If HTML is provided, use it directly
+        console.log(`${logPrefix}Using provided HTML content (length: ${htmlContent.length})`);
+        initialHtml = htmlContent;
+        // Attempt to parse iframe from provided HTML
+        const $initial = cheerio.load(initialHtml);
+        iframeSrc = $initial('iframe#iframeContent').attr('src');
+        if (!iframeSrc) {
+            // If no iframe in provided HTML, maybe it IS the iframe content?
+            // Or maybe the structure is different than expected.
+            // For now, assume the provided HTML *might* be the receipt content itself.
+            console.warn(`${logPrefix}No iframe found in provided HTML. Assuming it might be the receipt content itself.`);
+            receiptHtml = initialHtml; // Use initial HTML as receipt HTML
+            // We don't have an iframeUrl in this case, which might affect logging/debugging
+            iframeUrl = url; // Use original URL for logging context
+        } else {
+             // Construct absolute URL and fetch iframe content (still needed if initial HTML had iframe)
+            iframeUrl = new URL(iframeSrc, url).toString();
+            console.log(`${logPrefix}Found iframe URL in provided HTML: ${iframeUrl}. Fetching content...`);
+            const receiptResponse = await axios.get<string>(iframeUrl, {
+                headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Referer': url // Use original URL as referer
+                },
+                timeout: 20000,
+                responseType: 'text'
+            });
+            receiptHtml = receiptResponse.data;
+            console.log(`${logPrefix}Fetched receipt HTML (length: ${receiptHtml.length})`);
+        }
+
+    } else {
+        // If no HTML provided, fetch as before
+        // 1. Fetch the initial webpage content to find the iframe
+        console.log(`${logPrefix}Fetching initial URL: ${url}`);
+        const initialResponse = await axios.get<string>(url, { // Specify expected response type as string
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' },
       timeout: 15000,
-      responseType: 'text' // Keep responseType for clarity and potential runtime behavior
-    });
-    const initialHtml = initialResponse.data; // Type is now correctly inferred as string
-    console.log(`${logPrefix}Fetched initial HTML (length: ${initialHtml.length})`);
+          responseType: 'text'
+        });
+        initialHtml = initialResponse.data;
+        console.log(`${logPrefix}Fetched initial HTML (length: ${initialHtml.length})`);
 
-    // 2. Parse initial HTML to find the iframe source
-    const $initial = cheerio.load(initialHtml);
-    const iframeSrc = $initial('iframe#iframeContent').attr('src');
+        // 2. Parse initial HTML to find the iframe source
+        const $initial = cheerio.load(initialHtml);
+        iframeSrc = $initial('iframe#iframeContent').attr('src');
 
-    if (!iframeSrc) {
-      throw new Error(`${logPrefix}Could not find iframe#iframeContent src in initial HTML from ${url}`);
+        if (!iframeSrc) {
+          throw new Error(`${logPrefix}Could not find iframe#iframeContent src in initial HTML from ${url}`);
+        }
+
+        // 3. Construct absolute URL and fetch iframe content
+        iframeUrl = new URL(iframeSrc, url).toString();
+        console.log(`${logPrefix}Found iframe URL: ${iframeUrl}. Fetching content...`);
+        const receiptResponse = await axios.get<string>(iframeUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Referer': url
+          },
+          timeout: 20000,
+          responseType: 'text'
+        });
+        receiptHtml = receiptResponse.data;
+        console.log(`${logPrefix}Fetched receipt HTML (length: ${receiptHtml.length})`);
     }
 
-    // 3. Construct absolute URL and fetch iframe content
-    const iframeUrl = new URL(iframeSrc, url).toString();
-    console.log(`${logPrefix}Found iframe URL: ${iframeUrl}. Fetching content...`);
-    const receiptResponse = await axios.get<string>(iframeUrl, { // Specify expected response type as string
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Referer': url
-      },
-      timeout: 20000,
-      responseType: 'text' // Keep responseType for clarity and potential runtime behavior
-    });
-    const receiptHtml = receiptResponse.data; // Type is now correctly inferred as string
-    console.log(`${logPrefix}Fetched receipt HTML (length: ${receiptHtml.length})`);
 
-    // 4. Parse the receipt HTML
+    // 4. Parse the final receipt HTML (either fetched or provided)
     const $ = cheerio.load(receiptHtml);
     const headerInfo: ParsedReceiptData['headerInfo'] = {};
     const items: ParsedReceiptData['items'] = [];
