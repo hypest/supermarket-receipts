@@ -6,9 +6,6 @@ import * as cheerio from 'cheerio';
 import { ReceiptParser, ParsedReceiptData } from './types';
 
 // --- NO LONGER USING PUPPETEER IN THIS PARSER ---
-// Imports for puppeteer, chromium, Browser, Page are removed.
-// Browser management functions (getBrowser, closeBrowserInstance) are removed.
-// Process exit hooks are removed.
 
 // --- Parser Implementation ---
 const epsilonSklavenitisParser: ReceiptParser = {
@@ -28,23 +25,18 @@ const epsilonSklavenitisParser: ReceiptParser = {
     // Check if HTML content was provided by the client
     if (!htmlContent) {
         console.error(`${logPrefix}HTML content is required for Epsilon/Sklavenitis parser but was not provided.`);
-        // Option 1: Throw an error to mark the job as failed clearly
         throw new Error("HTML content required for this parser was not provided by the client.");
-        // Option 2: Return empty data with a warning (less explicit failure)
-        // console.warn(`${logPrefix}HTML content not provided. Returning minimal data.`);
-        // return { headerInfo, items };
     }
 
     // --- Parse the PROVIDED HTML using Cheerio ---
     console.log(`${logPrefix}Parsing provided HTML content (length: ${htmlContent.length}) with Cheerio...`);
     const $ = cheerio.load(htmlContent);
 
-    // --- Extract Data using confirmed selectors ---
-    // (Keep the extraction logic as determined previously from the rendered HTML)
+    // --- Extract Data using confirmed selectors from cont.html ---
 
     // Date
     try {
-        const dateElement = $('span#issue-date');
+        const dateElement = $('span#issue-date'); // Correct selector
         const dateText = dateElement.text().trim(); // e.g., "22/03/2025 12:30"
         const dateMatch = dateText.match(/(\d{2})\/(\d{2})\/(\d{4})/); // Extract DD/MM/YYYY part
         if (dateMatch && dateMatch.length === 4) {
@@ -56,27 +48,37 @@ const epsilonSklavenitisParser: ReceiptParser = {
         } else { console.warn(`${logPrefix}Could not find date match (DD/MM/YYYY) in text: "${dateText}"`); }
     } catch (e) { console.error(`${logPrefix}Error parsing date: ${e instanceof Error ? e.message : String(e)}`); }
 
-    // Total Amount
+    // Total Amount - Using Payment Methods table as input#gross-value might not have value attribute set
     try {
-        // IMPORTANT: The total is in an INPUT field in the rendered HTML.
-        // Cheerio cannot get the '.val()' of an input like jQuery.
-        // We need to get the 'value' ATTRIBUTE.
-        const totalValue = $('input#gross-value').attr('value'); // Get 'value' attribute
-        if (totalValue) {
-            headerInfo.total_amount = parseFloat(totalValue) || null;
-        } else { console.warn(`${logPrefix}Could not find value attribute for total amount input#gross-value`); }
+        const paymentTableTotalElement = $('div.form-section__container:has(h6:contains("Τρόποι Πληρωμής")) table tbody td:last-child');
+        if (paymentTableTotalElement.length > 0) {
+            const totalString = paymentTableTotalElement.first().text().trim(); // e.g., "29,22"
+            // Replace comma with dot for parsing
+            headerInfo.total_amount = parseFloat(totalString.replace(',', '.')) || null;
+        } else {
+             console.warn(`${logPrefix}Could not find total amount in payment methods table. Trying input#gross-value attribute...`);
+             // Fallback to input attribute just in case
+             const totalValueAttr = $('input#gross-value').attr('value');
+             if (totalValueAttr) {
+                 headerInfo.total_amount = parseFloat(totalValueAttr) || null;
+             } else {
+                 console.warn(`${logPrefix}Could not find total amount using fallback input#gross-value attribute either.`);
+             }
+        }
     } catch (e) { console.error(`${logPrefix}Error parsing total amount: ${e instanceof Error ? e.message : String(e)}`); }
 
     // UID
     try {
+        // Find the span containing "UID:", then extract the UID value from its text content
         const uidSpan = $('div.doc-info__container span:contains("UID:")');
         if (uidSpan.length > 0) {
-            const fullText = uidSpan.text();
-            const uidMatch = fullText.match(/UID:\s*([A-F0-9]+)/i);
+            const fullText = uidSpan.text(); // Text might be "UID: ACTUAL_UID_VALUE"
+            const uidMatch = fullText.match(/UID:\s*([A-F0-9]+)/i); // Extract hex value after "UID:"
             if (uidMatch && uidMatch[1]) {
                  headerInfo.uid = uidMatch[1];
             } else {
-                const nextElementText = uidSpan.next().text().trim();
+                 // Fallback if UID is in the next element (less likely based on provided HTML)
+                 const nextElementText = uidSpan.next().text().trim();
                  if (nextElementText.match(/^[A-F0-9]+$/i)) {
                     headerInfo.uid = nextElementText;
                  } else {
@@ -88,19 +90,20 @@ const epsilonSklavenitisParser: ReceiptParser = {
 
     // Items
     try {
-        const itemsTable = $('div.document-lines-table table.table');
+        const itemsTable = $('div.document-lines-table table.table'); // Correct table selector
         itemsTable.find('tbody tr').each((index: number, element: cheerio.Element) => {
             const columns = $(element).find('td');
-            if (columns.length >= 6) {
-                const name = $(columns[1]).text().trim();
-                const quantityText = $(columns[2]).text().trim();
-                const vatAmountText = $(columns[4]).text().trim();
-                const netValueText = $(columns[5]).text().trim();
+            if (columns.length >= 6) { // Need at least 6 columns
+                const name = $(columns[1]).text().trim(); // Column index 1 (second td)
+                const quantityText = $(columns[2]).text().trim(); // Column index 2 (third td)
+                const vatAmountText = $(columns[4]).text().trim(); // Column index 4 (fifth td)
+                const netValueText = $(columns[5]).text().trim(); // Column index 5 (sixth td)
 
+                // Use comma as decimal separator for parsing based on example HTML
                 const quantity = parseFloat(quantityText.replace(',', '.')) || 0;
                 const vatAmount = parseFloat(vatAmountText.replace(',', '.')) || 0;
                 const netValue = parseFloat(netValueText.replace(',', '.')) || 0;
-                const price = parseFloat((netValue + vatAmount).toFixed(2));
+                const price = parseFloat((netValue + vatAmount).toFixed(2)); // Calculate total line price
 
                 if (name && quantity > 0 && !isNaN(price)) {
                     items.push({ name, quantity, price });
@@ -126,5 +129,5 @@ const epsilonSklavenitisParser: ReceiptParser = {
 };
 
 export default epsilonSklavenitisParser;
-// Remove exported closeBrowser function as Puppeteer is no longer used here
+// No browser closing function needed anymore
 // export { closeBrowserInstance as closeEpsilonSklavenitisBrowser };

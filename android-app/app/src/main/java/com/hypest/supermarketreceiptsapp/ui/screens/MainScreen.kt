@@ -101,23 +101,17 @@ fun MainScreen(
                     // The QrCodeScanner is launched via the side-effect above.
                     // We might show a subtle background or placeholder here,
                     // but the scanner UI itself takes over.
-                    // Text("Launching Scanner...")
+                    // Text("Launching Scanner...") // Or just an empty Box
                 }
                 is MainScreenState.ExtractingHtml -> {
-                    // Show loading indicator and the hidden WebView
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Extracting receipt details...")
-
-                        // Render the WebView, but keep it hidden
-                        HtmlExtractorWebView(
-                            url = state.url,
-                            onHtmlExtracted = { url, html -> mainViewModel.onHtmlExtracted(url, html) },
-                            onError = { url, error -> mainViewModel.onHtmlExtractionError(url, error) },
-                            modifier = Modifier.size(0.dp) // Hide the WebView
-                        )
-                    }
+                    // Show the WebView fullscreen while extracting
+                    // The WebView itself will show loading progress/page content
+                    HtmlExtractorWebView(
+                        url = state.url,
+                        onHtmlExtracted = { url, html -> mainViewModel.onHtmlExtracted(url, html) },
+                        onError = { url, error -> mainViewModel.onHtmlExtractionError(url, error) },
+                        modifier = Modifier.fillMaxSize() // Make WebView fill the screen
+                    )
                 }
                 is MainScreenState.Processing -> {
                     // Show loading indicator while submitting data

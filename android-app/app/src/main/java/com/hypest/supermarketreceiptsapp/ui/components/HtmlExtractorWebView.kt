@@ -3,11 +3,8 @@ package com.hypest.supermarketreceiptsapp.ui.components
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.util.Log
-import android.webkit.JavascriptInterface
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.* // Import WebSettings
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
@@ -16,7 +13,7 @@ import kotlinx.coroutines.delay
 private const val TAG = "HtmlExtractorWebView"
 private const val JS_INTERFACE_NAME = "AndroidHtmlExtractor"
 // Timeout in milliseconds to wait after onPageFinished before attempting extraction
-private const val EXTRACTION_DELAY_MS = 5000L // Adjust as needed
+private const val EXTRACTION_DELAY_MS = 15000L // Increased delay to 15 seconds
 
 /**
  * A composable that loads a URL in a hidden WebView, waits for potential
@@ -61,7 +58,10 @@ fun HtmlExtractorWebView(
         factory = { context ->
             WebView(context).apply {
                 settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true // May be needed by some sites
+                settings.domStorageEnabled = true
+                settings.loadWithOverviewMode = true // Load the HTML in overview mode
+                settings.useWideViewPort = true // Enable support for the "<meta name='viewport'>" tag
+                settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW // Allow mixed content
 
                 // Create and add the JavaScript interface
                 val jsInterface = JavaScriptInterface(
