@@ -18,8 +18,9 @@ sealed class MainScreenState {
     data class NoPermission(val message: String) : MainScreenState()
     object ReadyToScan : MainScreenState()
     object Scanning : MainScreenState()
-    data class ExtractingHtml(val url: String) : MainScreenState() // State for WebView extraction
-    data class Processing(val url: String, val html: String?) : MainScreenState() // Include optional HTML
+    // Add showOverlay flag, defaulting to true
+    data class ExtractingHtml(val url: String, val showOverlay: Boolean = true) : MainScreenState()
+    data class Processing(val url: String, val html: String?) : MainScreenState()
     object Success : MainScreenState()
     data class Error(val message: String) : MainScreenState()
 }
@@ -123,7 +124,16 @@ class MainViewModel @Inject constructor(
     fun onHtmlExtractionError(url: String, error: String) {
         Log.e("MainViewModel", "HTML extraction error for URL $url: $error")
         _screenState.value = MainScreenState.Error("Failed to extract HTML: $error")
-        // Consider going back to ReadyToScan automatically or require user action
+         // Consider going back to ReadyToScan automatically or require user action
+     }
+
+    // Called by HtmlExtractorWebView if it detects a persistent challenge page
+    fun onChallengeInteractionRequired() {
+        if (_screenState.value is MainScreenState.ExtractingHtml) {
+            val currentState = _screenState.value as MainScreenState.ExtractingHtml
+            Log.d("MainViewModel", "Challenge interaction required for ${currentState.url}. Hiding overlay.")
+            _screenState.value = currentState.copy(showOverlay = false)
+        }
     }
 
 

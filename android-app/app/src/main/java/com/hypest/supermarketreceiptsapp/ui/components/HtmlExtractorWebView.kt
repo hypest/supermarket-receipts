@@ -3,32 +3,40 @@ package com.hypest.supermarketreceiptsapp.ui.components
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.util.Log
-import android.webkit.* // Import WebSettings
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import android.webkit.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private const val TAG = "HtmlExtractorWebView"
 private const val JS_INTERFACE_NAME = "AndroidHtmlExtractor"
-// Timeout in milliseconds to wait after onPageFinished before attempting extraction
-private const val EXTRACTION_DELAY_MS = 15000L // Increased delay to 15 seconds
+// Delay after page finished before attempting extraction
+private const val EXTRACTION_DELAY_MS = 15000L
+// Delay after page started before checking for persistent challenge iframe
+private const val CHALLENGE_CHECK_DELAY_MS = 7000L // Shorter delay to check for challenge
 
 /**
- * A composable that loads a URL in a hidden WebView, waits for potential
- * client-side rendering, extracts the final HTML, and calls a callback.
+ * A composable that loads a URL in a WebView, attempts to detect Cloudflare challenges,
+ * extracts the final HTML, and calls appropriate callbacks.
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun HtmlExtractorWebView(
     url: String,
-    modifier: Modifier = Modifier, // Keep modifier for potential layout needs (e.g., size 0)
+    modifier: Modifier = Modifier,
     onHtmlExtracted: (url: String, html: String) -> Unit,
-    onError: (url: String, error: String) -> Unit
+    onError: (url: String, error: String) -> Unit,
+    onChallengeInteractionRequired: () -> Unit // New callback
 ) {
-    // Remember the WebView state
     val webView = remember { mutableMapOf<String, WebView?>() }
+    // Remember coroutine scope for launching delayed checks
+    val coroutineScope = rememberCoroutineScope()
+    var challengeCheckJob by remember { mutableStateOf<Job?>(null) }
 
     // JavaScript Interface class
     class JavaScriptInterface(
@@ -37,33 +45,36 @@ fun HtmlExtractorWebView(
     ) {
         @JavascriptInterface
         fun processHTML(html: String?) {
-            if (html != null) {
-                Log.d(TAG, "Received HTML (length: ${html.length}) via JS Interface")
-                onHtmlReceived(html)
-            } else {
-                Log.w(TAG, "Received null HTML via JS Interface")
-                onErrorOccurred("JavaScript extraction returned null HTML.")
+            // Ensure this runs on the main thread if it needs to update UI state via ViewModel
+            coroutineScope.launch(Dispatchers.Main) {
+                if (html != null) {
+                    Log.d(TAG, "Received HTML (length: ${html.length}) via JS Interface")
+                    onHtmlReceived(html)
+                } else {
+                    Log.w(TAG, "Received null HTML via JS Interface")
+                    onErrorOccurred("JavaScript extraction returned null HTML.")
+                }
             }
         }
 
         @JavascriptInterface
         fun logError(error: String) {
-            Log.e(TAG, "JavaScript Error: $error")
-            onErrorOccurred("JavaScript Error: $error")
+             coroutineScope.launch(Dispatchers.Main) {
+                Log.e(TAG, "JavaScript Error: $error")
+                onErrorOccurred("JavaScript Error: $error")
+             }
         }
     }
 
-    // Use AndroidView to embed the WebView
     AndroidView(
         factory = { context ->
             WebView(context).apply {
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
-                settings.loadWithOverviewMode = true // Load the HTML in overview mode
-                settings.useWideViewPort = true // Enable support for the "<meta name='viewport'>" tag
-                settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW // Allow mixed content
+                settings.loadWithOverviewMode = true
+                settings.useWideViewPort = true
+                settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
-                // Create and add the JavaScript interface
                 val jsInterface = JavaScriptInterface(
                     onHtmlReceived = { html -> onHtmlExtracted(url, html) },
                     onErrorOccurred = { error -> onError(url, error) }
@@ -74,19 +85,55 @@ fun HtmlExtractorWebView(
                     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                         super.onPageStarted(view, url, favicon)
                         Log.d(TAG, "Page loading started: $url")
+                        // Cancel any previous challenge check job
+                        challengeCheckJob?.cancel()
+                        // Schedule a check for the challenge iframe after a short delay
+                        challengeCheckJob = coroutineScope.launch {
+                            delay(CHALLENGE_CHECK_DELAY_MS)
+                            Log.d(TAG, "Checking for persistent Cloudflare challenge iframe...")
+                            view?.evaluateJavascript(
+                                """
+                                (function() {
+                                    var iframe = document.querySelector('iframe[src*="challenges.cloudflare.com"]');
+                                    // Also check for common challenge text elements
+                                    var verifyText = document.body.innerText.includes('Verify you are human') || document.body.innerText.includes('Checking your browser');
+                                    return (iframe !== null || verifyText);
+                                })();
+                                """.trimIndent()
+                            ) { result ->
+                                // Result is "true" or "false" as a string
+                                if (result == "true") {
+                                    Log.w(TAG, "Persistent Cloudflare challenge detected. Requiring user interaction.")
+                                    // Call the callback on the main thread
+                                     launch(Dispatchers.Main) {
+                                         onChallengeInteractionRequired()
+                                     }
+                                } else {
+                                    Log.d(TAG, "No persistent challenge detected after delay.")
+                                }
+                            }
+                        }
                     }
 
                     override fun onPageFinished(view: WebView?, currentUrl: String?) {
                         super.onPageFinished(view, currentUrl)
                         Log.d(TAG, "Page finished loading: $currentUrl. Waiting ${EXTRACTION_DELAY_MS}ms before extraction...")
+                        // Cancel the challenge check if page finishes quickly
+                        challengeCheckJob?.cancel()
 
-                        // Inject JavaScript to extract HTML after a delay
-                        // This delay gives client-side frameworks (like Blazor) time to render
                         view?.postDelayed({
                             Log.d(TAG, "Attempting to inject JS for HTML extraction...")
                             val jsCode = """
                                 (function() {
                                     try {
+                                        // Check again for challenge just before extraction
+                                        var iframe = document.querySelector('iframe[src*="challenges.cloudflare.com"]');
+                                        var verifyText = document.body.innerText.includes('Verify you are human') || document.body.innerText.includes('Checking your browser');
+                                        if (iframe !== null || verifyText) {
+                                             $JS_INTERFACE_NAME.logError('Cloudflare challenge present during HTML extraction attempt.');
+                                             return; // Don't extract if challenge is still there
+                                        }
+
                                         var htmlContent = document.documentElement.outerHTML;
                                         if (htmlContent) {
                                             $JS_INTERFACE_NAME.processHTML(htmlContent);
@@ -110,25 +157,19 @@ fun HtmlExtractorWebView(
                      ) {
                          super.onReceivedError(view, errorCode, description, failingUrl)
                          Log.e(TAG, "WebView error: Code $errorCode, Desc: $description, URL: $failingUrl")
+                         challengeCheckJob?.cancel() // Cancel check on error
                          onError(url, "WebView error code $errorCode: $description")
                      }
                 }
-                // Store the WebView instance to potentially clean up later if needed
                 webView[url] = this
             }
         },
         update = { view ->
-            // Load the URL when the composable is updated with a new URL (or initially)
-            // Check if the URL is already loaded to prevent reloading on recomposition
             if (view.url != url) {
                  Log.d(TAG, "Loading URL in WebView: $url")
                  view.loadUrl(url)
             }
         },
-        modifier = modifier // Apply modifier (e.g., size(0.dp) to hide it)
+        modifier = modifier
     )
-
-    // Optional: Clean up WebView when the composable leaves composition
-    // DisposableEffect might be complex if the WebView needs to persist across recompositions
-    // Consider managing WebView lifecycle more explicitly if needed.
 }

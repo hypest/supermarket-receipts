@@ -2,9 +2,14 @@ package com.hypest.supermarketreceiptsapp.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -104,14 +109,38 @@ fun MainScreen(
                     // Text("Launching Scanner...") // Or just an empty Box
                 }
                 is MainScreenState.ExtractingHtml -> {
-                    // Show the WebView fullscreen while extracting
-                    // The WebView itself will show loading progress/page content
-                    HtmlExtractorWebView(
-                        url = state.url,
-                        onHtmlExtracted = { url, html -> mainViewModel.onHtmlExtracted(url, html) },
-                        onError = { url, error -> mainViewModel.onHtmlExtractionError(url, error) },
-                        modifier = Modifier.fillMaxSize() // Make WebView fill the screen
-                    )
+                    // Box to hold WebView and potential overlay
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        HtmlExtractorWebView(
+                            url = state.url,
+                            onHtmlExtracted = { url, html -> mainViewModel.onHtmlExtracted(url, html) },
+                            onError = { url, error -> mainViewModel.onHtmlExtractionError(url, error) },
+                            onChallengeInteractionRequired = { mainViewModel.onChallengeInteractionRequired() }, // Pass new callback
+                            modifier = Modifier.fillMaxSize() // WebView fills the Box
+                        )
+
+                        // Semi-transparent overlay, shown/hidden based on state flag
+                        AnimatedVisibility(
+                            visible = state.showOverlay,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .background(Color.Black.copy(alpha = 0.5f)) // Semi-transparent black
+                                    .fillMaxSize(), // overlay fills the Box
+                                contentAlignment = Alignment.Center
+                            ) {
+                                // Show loading indicator on top of the overlay
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    CircularProgressIndicator(color = Color.White)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Loading receipt...", color = Color.White)
+                                }
+                            }
+                        }
+                    }
                 }
                 is MainScreenState.Processing -> {
                     // Show loading indicator while submitting data
