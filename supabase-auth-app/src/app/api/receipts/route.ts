@@ -18,6 +18,8 @@ export async function GET(_request: Request) { // Add ESLint disable comment
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  console.log(`[API /receipts] Fetching receipts for user ID: ${user.id}`); // Log user ID
+
   // Fetch receipts for the logged-in user, ordered by date descending
   // Also fetch related receipt_items
   const { data: receipts, error: fetchError } = await supabase
@@ -45,7 +47,7 @@ export async function GET(_request: Request) { // Add ESLint disable comment
     return NextResponse.json({ error: 'Failed to fetch receipts', details: fetchError.message }, { status: 500 });
   }
 
-  // console.log(`GET /api/receipts: Fetched ${receipts?.length ?? 0} receipts for user ${user.id}`);
+  console.log(`[API /receipts] Fetched ${receipts?.length ?? 0} receipts for user ${user.id}. Data:`, JSON.stringify(receipts, null, 2)); // Log fetched data
 
   return NextResponse.json(receipts ?? []);
 }
