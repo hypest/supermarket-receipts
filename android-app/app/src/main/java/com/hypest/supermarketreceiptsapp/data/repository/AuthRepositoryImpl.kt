@@ -2,9 +2,9 @@ package com.hypest.supermarketreceiptsapp.data.repository
 
 import com.hypest.supermarketreceiptsapp.domain.repository.AuthRepository
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.providers.builtin.Email
-import io.github.jan.supabase.auth.status.SessionStatus
+import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.gotrue.providers.builtin.Email
+import io.github.jan.supabase.gotrue.SessionStatus
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -12,13 +12,13 @@ class AuthRepositoryImpl @Inject constructor(
     private val supabaseClient: SupabaseClient
 ) : AuthRepository {
 
-    private val auth = supabaseClient.auth
-
-    override val sessionStatus: Flow<SessionStatus> = auth.sessionStatus
+    // Get sessionStatus from gotrue module in v2
+    override val sessionStatus: Flow<SessionStatus> = supabaseClient.auth.sessionStatus
 
     override suspend fun signInWithEmail(email: String, password: String): Result<Unit> {
         return try {
-            auth.signInWith(Email) { // Use the imported Email provider
+            // Use gotrue module and signInWith(Email) for v2
+            supabaseClient.auth.signInWith(Email) {
                 this.email = email
                 this.password = password
             }
@@ -31,15 +31,15 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun signOut() {
         try {
-            auth.signOut()
+            // Use gotrue module and logout() for v2
+            supabaseClient.auth.signOut()
         } catch (e: Exception) {
-            e.printStackTrace()
+            e.printStackTrace() // Keep basic error handling
         }
     }
 
     override fun getCurrentUserId(): String? {
-        // Accessing sessionStatus.value might be slightly different or require specific state handling in v3
-        // Check library docs if this causes issues.
-        return (auth.sessionStatus.value as? SessionStatus.Authenticated)?.session?.user?.id
+        // Accessing user id in v2 might be directly on the currentUser
+        return supabaseClient.auth.currentUserOrNull()?.id
     }
 }

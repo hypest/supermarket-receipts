@@ -45,7 +45,7 @@ android {
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_KEY", "\"$supabaseKey\"")
 
-        minSdk = 21 // Keep minSdk 21 unless specific features require higher
+        minSdk = 26 // Keep minSdk at 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -102,6 +102,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.material.icons.core) // Added Material Icons
 
     // Hilt
     implementation(libs.hilt.android)
@@ -112,13 +113,15 @@ dependencies {
     androidTestImplementation(libs.hilt.android.testing) // Hilt testing library
 
     // Supabase v3 (Using version catalog and BOM)
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.0.0")) // Use direct BOM coordinates
-    // implementation(libs.supabase.client) // Add if needed
+    implementation(platform("io.github.jan-tennert.supabase:bom:2.0.1")) // Use direct BOM coordinates
     implementation(libs.supabase.auth)      // Include Supabase Auth
     implementation(libs.supabase.postgrest) // Include Supabase Postgrest
+    implementation(libs.supabase.realtime)  // Include Supabase Realtime
+    // implementation(libs.supabase.storage) // Add if needed
 
     implementation(libs.ktor.client.core)    // Ktor client core (required by Supabase v3)
-    implementation(libs.ktor.client.android) // Ktor Android client engine (required by Supabase v3)
+    implementation(libs.ktor.client.okhttp)  // Ktor OkHttp engine (supports WebSockets)
+    implementation(libs.okhttp.logging.interceptor) // Added OkHttp Logging Interceptor
     // implementation(libs.supabase.compose.auth) // Add if Compose Auth UI is needed
 
     // CameraX

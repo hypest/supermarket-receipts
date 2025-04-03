@@ -17,25 +17,18 @@ import androidx.hilt.navigation.compose.hiltViewModel // Re-add hiltViewModel
 import androidx.navigation.NavController
 import com.hypest.supermarketreceiptsapp.navigation.Screen
 import com.hypest.supermarketreceiptsapp.viewmodel.AuthViewModel // Re-add AuthViewModel
-import io.github.jan.supabase.auth.status.SessionStatus // Add SessionStatus import
 
 @Composable
 fun LoginScreen(
     navController: NavController,
     viewModel: AuthViewModel = hiltViewModel() // Re-inject ViewModel
 ) {
-    val sessionStatus by viewModel.sessionStatus.collectAsState() // Re-add session observation
+    // Observe session status (e.g., for showing errors from ViewModel, not for navigation)
+    val sessionStatus by viewModel.sessionStatus.collectAsState()
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
 
-    // Re-add navigation based on auth state
-    LaunchedEffect(sessionStatus) {
-        if (sessionStatus is SessionStatus.Authenticated) {
-            navController.navigate(Screen.Main.route) {
-                popUpTo(Screen.Login.route) { inclusive = true }
-            }
-        }
-    }
+    // Navigation is now handled by NavGraph based on initial auth state
 
     Scaffold { paddingValues ->
         Column(

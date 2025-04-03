@@ -4,10 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hypest.supermarketreceiptsapp.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.jan.supabase.auth.status.SessionStatus // Add SessionStatus import
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import io.github.jan.supabase.gotrue.SessionStatus
+import kotlinx.coroutines.flow.* // Import necessary operators
+import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed // Import WhileSubscribed
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,8 +18,8 @@ class AuthViewModel @Inject constructor(
     val sessionStatus: StateFlow<SessionStatus> = authRepository.sessionStatus
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = SessionStatus.Initializing // Or appropriate initial state for v3
+            started = WhileSubscribed(5000), // Use WhileSubscribed correctly
+            initialValue = SessionStatus.LoadingFromStorage // Use Initializing as initial state for v2
         )
 
     // TODO: Add state for loading indicators and error messages if needed

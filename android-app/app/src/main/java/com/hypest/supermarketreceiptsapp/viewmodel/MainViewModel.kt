@@ -6,12 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.hypest.supermarketreceiptsapp.domain.repository.AuthRepository
 import com.hypest.supermarketreceiptsapp.domain.repository.ReceiptRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.jan.supabase.gotrue.SessionStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.* // Import necessary flow operators
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import io.github.jan.supabase.auth.auth // Ensure auth is imported if needed directly
-import io.github.jan.supabase.auth.status.SessionStatus // Import SessionStatus
 
 // Unified state representation for the Main Screen
 sealed class MainScreenState {
@@ -104,7 +103,7 @@ class MainViewModel @Inject constructor(
 
      // Observe auth status and process pending data when authenticated
      init {
-         authRepository.sessionStatus
+         authRepository.sessionStatus // Should now use the v2 SessionStatus from AuthRepository
              .onEach { status ->
                  Log.d("MainViewModel", "Auth status changed: $status")
                  if (status is SessionStatus.Authenticated && pendingUrl != null) {
@@ -113,7 +112,7 @@ class MainViewModel @Inject constructor(
                      // Clear pending data after processing attempt starts
                      pendingUrl = null
                      pendingHtml = null
-                 } else if (status is SessionStatus.NotAuthenticated && _screenState.value is MainScreenState.Processing) {
+                 } else if (status is SessionStatus.NotAuthenticated && _screenState.value is MainScreenState.Processing) { // Check v2 NotAuthenticated state
                      // Handle case where user logs out while processing was pending
                      Log.w("MainViewModel", "User logged out while receipt processing was pending.")
                      _screenState.value = MainScreenState.Error("User logged out before receipt could be saved.")
@@ -131,13 +130,6 @@ class MainViewModel @Inject constructor(
          viewModelScope.launch {
              // We know user is authenticated here because this is only called from the observer
             Log.d("MainViewModel", "Processing receipt data: URL=$url, HasHTML=${html != null}")
-
-            // Choose repository function based on whether HTML was extracted
-            // if (userId == null) {
-            //     Log.e("MainViewModel", "User not logged in, cannot save receipt.")
-            //     _screenState.value = MainScreenState.Error("User not logged in.")
-            //     return@launch
-            // }
 
             Log.d("MainViewModel", "Processing receipt data: URL=$url, HasHTML=${html != null}") // Removed UserID from log
 
