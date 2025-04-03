@@ -28,41 +28,102 @@ export default function ReceiptsPage() {
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const supabase = createClient(); // Initialize client-side client
 
-  useEffect(() => {
-    const fetchReceipts = async () => {
-      setLoading(true);
-      setError(null);
+  // Function to fetch receipts
+  const fetchReceipts = async () => {
+    setLoading(true);
+    setError(null);
 
-      // Check if user is logged in before fetching
+    // Check if user is logged in before fetching
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setError('You must be logged in to view receipts.');
+      setLoading(false);
+      // Optionally redirect to login or show login prompt
+      return;
+    }
+
+    try {
+      // Use fetch API to call our backend endpoint
+      const response = await fetch('/api/receipts');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      const data: Receipt[] = await response.json();
+      setReceipts(data);
+    } catch (e: unknown) { // Change type to unknown
+      console.error("Failed to fetch receipts:", e);
+      // Type check before accessing message
+      const errorMessage = e instanceof Error ? e.message : 'Failed to load receipts.';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial fetch on component mount
+  useEffect(() => {
+    fetchReceipts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
+
+  // Subscribe to realtime updates
+  useEffect(() => {
+    // Ensure user is logged in before subscribing
+    const checkAuthAndSubscribe = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        setError('You must be logged in to view receipts.');
-        setLoading(false);
-        // Optionally redirect to login or show login prompt
-        return;
+        console.log("User not logged in, skipping realtime subscription.");
+        return null; // Don't subscribe if not logged in
       }
 
-      try {
-        // Use fetch API to call our backend endpoint
-        const response = await fetch('/api/receipts');
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-        }
-        const data: Receipt[] = await response.json();
-        setReceipts(data);
-      } catch (e: unknown) { // Change type to unknown
-        console.error("Failed to fetch receipts:", e);
-        // Type check before accessing message
-        const errorMessage = e instanceof Error ? e.message : 'Failed to load receipts.';
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
+      console.log(`Setting up realtime subscription for user: ${session.user.id}`);
+      const channel = supabase
+        .channel('receipts_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'receipts',
+            filter: `user_id=eq.${session.user.id}` // Only listen for changes for the current user
+          },
+          (payload) => {
+            console.log('Realtime: New receipt detected!', payload);
+            // Re-fetch receipts when a new one is inserted for this user
+            fetchReceipts();
+          }
+        )
+        .subscribe((status, err) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('Realtime: Subscribed to receipts changes');
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.error(`Realtime: Subscription error - ${status}`, err);
+            setError(`Realtime subscription failed: ${status}`);
+          } else if (status === 'CLOSED') {
+            console.log('Realtime: Subscription closed');
+          }
+        });
+
+      return channel;
     };
 
-    fetchReceipts();
-  }, [supabase]); // Re-run if supabase client instance changes (though unlikely)
+    let subscriptionChannel: ReturnType<typeof supabase.channel> | null = null;
+    checkAuthAndSubscribe().then(channel => {
+      subscriptionChannel = channel;
+    });
+
+    // Cleanup function to remove the subscription when the component unmounts
+    return () => {
+      if (subscriptionChannel) {
+        console.log('Realtime: Unsubscribing from receipts changes');
+        supabase.removeChannel(subscriptionChannel).catch(err => {
+          console.error("Realtime: Error removing channel", err);
+        });
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase]); // Re-run if supabase client instance changes
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
