@@ -94,10 +94,14 @@ fun MainScreen(
                     }
                 }
                 MainScreenState.ReadyToScan -> {
-                    // Show "Scan QR Code" and Logout buttons
+                    // Show "Scan QR Code", "View Receipts", and Logout buttons
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Button(onClick = { mainViewModel.startScanning() }) {
                             Text("Scan QR Code")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp)) // Add space
+                        Button(onClick = { navController.navigate(Screen.Receipts.route) }) { // Navigate to Receipts
+                            Text("View My Receipts")
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = { authViewModel.signOut() }) {

@@ -1,15 +1,26 @@
 package com.hypest.supermarketreceiptsapp.domain.model
 
 import kotlinx.serialization.Serializable
-
 import kotlinx.serialization.SerialName
 
-@Serializable // For potential use with Supabase serialization
+@Serializable
 data class Receipt(
-    val id: Long? = null, // Use Long for bigint/int8 from Supabase
-    val url: String,
-    val user_id: String, // To associate with the logged-in user
-    @SerialName("html_content") // Match potential snake_case column name in DB
-    val htmlContent: String? = null // Add nullable HTML content field
-    // Add timestamp or other fields if needed
+    val id: String, // UUID from receipts table
+
+    @SerialName("receipt_date")
+    val receiptDate: String? = null, // ISO 8601 timestamp string
+
+    @SerialName("total_amount")
+    val totalAmount: Double? = null,
+
+    @SerialName("store_name")
+    val storeName: String? = null,
+
+    val uid: String? = null, // Government service UID
+
+    @SerialName("created_at")
+    val createdAt: String, // ISO 8601 timestamp string for when it was scanned/processed initially
+
+    @SerialName("receipt_items") // Match the nested select name from the query
+    val items: List<ReceiptItem> = emptyList() // List of items
 )

@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.hypest.supermarketreceiptsapp.ui.screens.LoginScreen
 import com.hypest.supermarketreceiptsapp.ui.screens.MainScreen
+import com.hypest.supermarketreceiptsapp.ui.screens.ReceiptsScreen // Import ReceiptsScreen
 // Import ViewModels later when needed
 
 @Composable
@@ -22,6 +23,9 @@ fun NavGraph(navController: NavHostController) {
         }
         composable(route = Screen.Main.route) {
             MainScreen(navController = navController)
+        }
+        composable(route = Screen.Receipts.route) { // Add ReceiptsScreen destination
+            ReceiptsScreen() // No NavController needed if it doesn't navigate further
         }
         // Add other destinations later
     }

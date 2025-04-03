@@ -1,7 +1,7 @@
 package com.hypest.supermarketreceiptsapp.domain.repository
 
-// Removed Receipt import as it's not used here
-// import com.hypest.supermarketreceiptsapp.domain.model.Receipt
+import com.hypest.supermarketreceiptsapp.domain.model.Receipt
+import kotlinx.coroutines.flow.Flow
 
 interface ReceiptRepository {
     // Function to submit URL and potentially extracted HTML
@@ -10,5 +10,6 @@ interface ReceiptRepository {
     // Function to just save the URL (for providers where client-side extraction isn't needed/possible)
     suspend fun saveReceiptUrl(url: String, userId: String): Result<Unit>
 
-    // Add functions for fetching receipts later if needed
+    // Function to fetch all processed receipts for the current user (Flow handles suspension)
+    fun getReceipts(): Flow<Result<List<Receipt>>>
 }
