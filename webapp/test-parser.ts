@@ -7,7 +7,7 @@ import { ParsedReceiptData } from './src/lib/receipt-parsers/types';
 // URL is still needed for context (like deriving store name if needed)
 const testUrl = 'https://epsilondigital-sklavenitis.epsilonnet.gr/FileDocument/Get/c75d537f-be8f-4118-2aa3-08dd626fe4d1';
 const testJobId = 'local-test-html-sklavenitis';
-const htmlFilePath = path.join(__dirname, '../cont.html'); // Path relative to supabase-auth-app dir
+const htmlFilePath = path.join(__dirname, '../cont.html'); // Path relative to webapp dir
 
 async function runTest() {
   console.log(`Testing parser for URL: ${testUrl} using HTML from ${htmlFilePath}`);
