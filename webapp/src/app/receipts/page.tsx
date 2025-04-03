@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react'; // Add useTransition
 import { createClient } from '@/supabase/client'; // Use client-side Supabase client
+import { deleteReceiptAction } from './actions'; // Import the server action
 
 // Define TypeScript types based on the API response and DB schema
 interface ReceiptItem {
@@ -26,6 +27,7 @@ export default function ReceiptsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
+  const [isDeleting, startDeleteTransition] = useTransition(); // Add transition state for delete
   const supabase = createClient(); // Initialize client-side client
 
   // Function to fetch receipts
@@ -156,7 +158,6 @@ export default function ReceiptsPage() {
         });
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]); // Re-run if supabase client instance changes
 
   const formatDate = (dateString: string | null) => {
@@ -220,10 +221,30 @@ export default function ReceiptsPage() {
           </div>
 
           {/* Receipt Details */}
-          <div className="md:col-span-2 bg-white shadow-md rounded-lg p-6">
+          <div className="md:col-span-2 bg-white shadow-md rounded-lg p-6 relative"> {/* Added relative positioning */}
             {selectedReceipt ? (
               <div>
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800">{selectedReceipt.store_name || 'Receipt Details'}</h2>
+                <div className="flex justify-between items-start mb-4"> {/* Flex container for title and button */}
+                  <h2 className="text-2xl font-semibold text-gray-800">{selectedReceipt.store_name || 'Receipt Details'}</h2>
+                  <button
+                    onClick={() => {
+                      if (confirm(`Are you sure you want to delete the receipt from ${selectedReceipt.store_name || 'Unknown Store'}?`)) {
+                        startDeleteTransition(async () => {
+                          const result = await deleteReceiptAction(selectedReceipt.id);
+                          if (!result.success) {
+                            alert(`Error deleting receipt: ${result.error}`); // Simple error alert
+                          }
+                          // Realtime listener should handle UI update, but we could deselect here too
+                          // setSelectedReceipt(null);
+                        });
+                      }
+                    }}
+                    disabled={isDeleting}
+                    className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 rounded hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
                 <div className="mb-4 space-y-1 text-sm text-gray-600">
                   <p><strong>Date:</strong> {formatDate(selectedReceipt.receipt_date)}</p>
                   <p><strong>Total:</strong> <span className="font-bold text-lg text-green-700">{formatCurrency(selectedReceipt.total_amount)}</span></p>
