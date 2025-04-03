@@ -7,10 +7,11 @@ import com.hypest.supermarketreceiptsapp.domain.repository.AuthRepository
 import com.hypest.supermarketreceiptsapp.domain.repository.ReceiptRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.* // Import necessary flow operators
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import io.github.jan.supabase.auth.auth // Ensure auth is imported if needed directly
+import io.github.jan.supabase.auth.status.SessionStatus // Import SessionStatus
 
 // Unified state representation for the Main Screen
 sealed class MainScreenState {
@@ -33,6 +34,10 @@ class MainViewModel @Inject constructor(
 
     private val _screenState = MutableStateFlow<MainScreenState>(MainScreenState.CheckingPermission)
     val screenState: StateFlow<MainScreenState> = _screenState.asStateFlow()
+
+    // Store pending data while waiting for auth
+    private var pendingUrl: String? = null
+    private var pendingHtml: String? = null
 
     // Keep track of actual permission status internally if needed for logic,
     // but UI state is driven by _screenState
@@ -74,7 +79,11 @@ class MainViewModel @Inject constructor(
             Log.d("MainViewModel", "Skipping HTML extraction, transitioning directly to Processing state for URL: $url")
             // For providers like Entersoft, process immediately without HTML
             _screenState.value = MainScreenState.Processing(url, null) // Pass null for HTML
-            processScannedData(url, null) // Call processing function directly
+            // Store data and wait for auth confirmation before processing
+            pendingUrl = url
+            pendingHtml = null
+            _screenState.value = MainScreenState.Processing(url, null) // Show processing state
+            // processScannedData(url, null) // Don't call directly, wait for auth state
         }
     }
 
@@ -86,27 +95,57 @@ class MainViewModel @Inject constructor(
             return
         }
         Log.d("MainViewModel", "HTML extracted (length: ${html.length}), transitioning to Processing state for URL: $url")
-        _screenState.value = MainScreenState.Processing(url, html) // Pass extracted HTML
-        processScannedData(url, html) // Call processing function with HTML
+        // Store data and wait for auth confirmation before processing
+        pendingUrl = url
+        pendingHtml = html
+        _screenState.value = MainScreenState.Processing(url, html) // Show processing state
+        // processScannedData(url, html) // Don't call directly, wait for auth state
     }
 
+     // Observe auth status and process pending data when authenticated
+     init {
+         authRepository.sessionStatus
+             .onEach { status ->
+                 Log.d("MainViewModel", "Auth status changed: $status")
+                 if (status is SessionStatus.Authenticated && pendingUrl != null) {
+                     Log.d("MainViewModel", "User authenticated, processing pending receipt for URL: $pendingUrl")
+                     processScannedData(pendingUrl!!, pendingHtml) // Pass stored data
+                     // Clear pending data after processing attempt starts
+                     pendingUrl = null
+                     pendingHtml = null
+                 } else if (status is SessionStatus.NotAuthenticated && _screenState.value is MainScreenState.Processing) {
+                     // Handle case where user logs out while processing was pending
+                     Log.w("MainViewModel", "User logged out while receipt processing was pending.")
+                     _screenState.value = MainScreenState.Error("User logged out before receipt could be saved.")
+                     pendingUrl = null
+                     pendingHtml = null
+                 }
+             }
+             .launchIn(viewModelScope)
+     }
+
+
     // Central function to handle submitting data to the repository
+    // Now called only when auth state is confirmed Authenticated and pending data exists
     private fun processScannedData(url: String, html: String?) {
          viewModelScope.launch {
-            val userId = authRepository.getCurrentUserId()
-            if (userId == null) {
-                Log.e("MainViewModel", "User not logged in, cannot save receipt.")
-                _screenState.value = MainScreenState.Error("User not logged in.")
-                return@launch
-            }
+             // We know user is authenticated here because this is only called from the observer
+            Log.d("MainViewModel", "Processing receipt data: URL=$url, HasHTML=${html != null}")
 
-            Log.d("MainViewModel", "Processing receipt data: URL=$url, HasHTML=${html != null}, User=$userId")
+            // Choose repository function based on whether HTML was extracted
+            // if (userId == null) {
+            //     Log.e("MainViewModel", "User not logged in, cannot save receipt.")
+            //     _screenState.value = MainScreenState.Error("User not logged in.")
+            //     return@launch
+            // }
+
+            Log.d("MainViewModel", "Processing receipt data: URL=$url, HasHTML=${html != null}") // Removed UserID from log
 
             // Choose repository function based on whether HTML was extracted
             val result = if (html != null) {
-                receiptRepository.submitReceiptData(url, html, userId)
+                receiptRepository.submitReceiptData(url, html) // Call without userId
             } else {
-                receiptRepository.saveReceiptUrl(url, userId)
+                receiptRepository.saveReceiptUrl(url) // Call without userId
             }
 
             result.onSuccess {
@@ -182,7 +221,7 @@ class MainViewModel @Inject constructor(
     // Called when user clicks "Scan Another" or "Try Again"
     fun resetToReadyState() {
         if (hasCameraPermissionInternal) {
-            _screenState.value = MainScreenState.ReadyToScan
+            _screenState.value = MainScreenState.Scanning
         } else {
             // If permission somehow got revoked, reflect that
              _screenState.value = MainScreenState.NoPermission("Camera permission is required.")

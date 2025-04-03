@@ -5,10 +5,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface ReceiptRepository {
     // Function to submit URL and potentially extracted HTML
-    suspend fun submitReceiptData(url: String, htmlContent: String, userId: String): Result<Unit>
+    suspend fun submitReceiptData(url: String, htmlContent: String): Result<Unit> // Removed userId
 
     // Function to just save the URL (for providers where client-side extraction isn't needed/possible)
-    suspend fun saveReceiptUrl(url: String, userId: String): Result<Unit>
+    suspend fun saveReceiptUrl(url: String): Result<Unit> // Removed userId
 
     // Function to fetch all processed receipts for the current user (Flow handles suspension)
     fun getReceipts(): Flow<Result<List<Receipt>>>
