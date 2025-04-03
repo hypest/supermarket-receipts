@@ -90,8 +90,13 @@ export default function ReceiptsPage() {
           },
           (payload) => {
             console.log('Realtime: New receipt detected!', payload);
-            // Re-fetch receipts when a new one is inserted for this user
-            fetchReceipts();
+            // Instead of re-fetching, prepend the new receipt to the state
+            const newReceipt = payload.new as Receipt;
+            // Ensure receipt_items exists, even if empty initially from the payload
+            if (!newReceipt.receipt_items) {
+              newReceipt.receipt_items = [];
+            }
+            setReceipts((currentReceipts) => [newReceipt, ...currentReceipts]);
           }
         )
         .subscribe((status, err) => {
