@@ -83,20 +83,49 @@ export default function ReceiptsPage() {
         .on(
           'postgres_changes',
           {
-            event: 'INSERT',
+            event: '*', // Listen for ALL events (INSERT, UPDATE, DELETE)
             schema: 'public',
             table: 'receipts',
             filter: `user_id=eq.${session.user.id}` // Only listen for changes for the current user
           },
           (payload) => {
-            console.log('Realtime: New receipt detected!', payload);
-            // Instead of re-fetching, prepend the new receipt to the state
-            const newReceipt = payload.new as Receipt;
-            // Ensure receipt_items exists, even if empty initially from the payload
-            if (!newReceipt.receipt_items) {
-              newReceipt.receipt_items = [];
+            console.log('Realtime: Change detected!', payload);
+
+            if (payload.eventType === 'INSERT') {
+              console.log('Realtime: Handling INSERT');
+              const newReceipt = payload.new as Receipt;
+              // Ensure receipt_items exists, even if empty initially from the payload
+              if (!newReceipt.receipt_items) {
+                newReceipt.receipt_items = [];
+              }
+              // Add the new receipt, maybe sort afterwards or prepend if order is newest first
+              setReceipts((currentReceipts) => [newReceipt, ...currentReceipts].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())); // Example sort
+            } else if (payload.eventType === 'DELETE') {
+              console.log('Realtime: Handling DELETE');
+              const oldReceiptId = payload.old.id;
+              setReceipts((currentReceipts) =>
+                currentReceipts.filter((receipt) => receipt.id !== oldReceiptId)
+              );
+              // If the deleted receipt was selected, deselect it
+              setSelectedReceipt((currentSelected) =>
+                currentSelected?.id === oldReceiptId ? null : currentSelected
+              );
+            } else if (payload.eventType === 'UPDATE') {
+              console.log('Realtime: Handling UPDATE');
+              const updatedReceipt = payload.new as Receipt;
+               if (!updatedReceipt.receipt_items) {
+                 updatedReceipt.receipt_items = [];
+               }
+              setReceipts((currentReceipts) =>
+                currentReceipts.map((receipt) =>
+                  receipt.id === updatedReceipt.id ? updatedReceipt : receipt
+                )
+              );
+               // If the updated receipt was selected, update the selection
+               setSelectedReceipt((currentSelected) =>
+                 currentSelected?.id === updatedReceipt.id ? updatedReceipt : currentSelected
+               );
             }
-            setReceipts((currentReceipts) => [newReceipt, ...currentReceipts]);
           }
         )
         .subscribe((status, err) => {
