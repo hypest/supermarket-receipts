@@ -2,9 +2,9 @@ package com.hypest.supermarketreceiptsapp.data.repository
 
 import com.hypest.supermarketreceiptsapp.domain.repository.AuthRepository
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.gotrue.auth
-import io.github.jan.supabase.gotrue.providers.builtin.Email
-import io.github.jan.supabase.gotrue.SessionStatus
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

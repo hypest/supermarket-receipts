@@ -15,8 +15,8 @@ import com.hypest.supermarketreceiptsapp.ui.screens.LoginScreen
 // import com.hypest.supermarketreceiptsapp.ui.screens.MainScreen // Removed
 import com.hypest.supermarketreceiptsapp.ui.screens.ReceiptsScreen // Import ReceiptsScreen
 import com.hypest.supermarketreceiptsapp.viewmodel.AuthViewModel // Import AuthViewModel
-import io.github.jan.supabase.gotrue.auth
-import io.github.jan.supabase.gotrue.SessionStatus // v2 import
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.status.SessionStatus // v2 import
 
 @Composable
 fun NavGraph(
@@ -31,7 +31,7 @@ fun NavGraph(
         when (sessionStatus) {
             is SessionStatus.Authenticated -> Screen.Receipts.route
             is SessionStatus.NotAuthenticated -> Screen.Login.route
-            SessionStatus.LoadingFromStorage -> null // Use v2 Initializing state
+            SessionStatus.Initializing -> null // Use v2 Initializing state
             // SessionStatus.NetworkError -> Screen.Login.route // Handle other states if needed
             else -> null // Represents other states
         }

@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.hypest.supermarketreceiptsapp.domain.repository.AuthRepository
 import com.hypest.supermarketreceiptsapp.domain.repository.ReceiptRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.jan.supabase.gotrue.SessionStatus
+import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.* // Import necessary flow operators
 import kotlinx.coroutines.launch

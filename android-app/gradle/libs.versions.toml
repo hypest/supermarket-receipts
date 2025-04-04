@@ -9,12 +9,12 @@ lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.1"
 composeBom = "2025.03.01"
 hilt = "2.52" # Updated Hilt version
-supabase = "2.0.1" # Trying latest v2 release for compatibility
+supabase = "3.0.0" # Trying latest v2 release for compatibility
 camerax = "1.4.2" # CameraX version
 mlkitBarcode = "17.3.0" # ML Kit Barcode Scanning version
 mockito = "5.12.0" # Mockito version
 kotlinxCoroutines = "1.9.0" # Coroutines version (including test)
-ktor = "2.3.12" # Ktor version compatible with Supabase v2
+ktor = "3.0.0" # Ktor version compatible with Supabase v2
 okhttp = "4.12.0" # OkHttp version (likely compatible)
 kotlinxSerialization = "1.7.3"
 playServicesCodeScanner = "16.1.0" # Kotlinx Serialization version
@@ -45,7 +45,7 @@ hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testi
 
 # Supabase v2 (Group: io.github.jan-tennert) - Use v2 artifact names
 supabase-client = { group = "io.github.jan-tennert.supabase", name = "supabase-kt", version.ref = "supabase" } # Base client
-supabase-auth = { group = "io.github.jan-tennert.supabase", name = "gotrue-kt", version.ref = "supabase" }     # Auth v2
+supabase-auth = { group = "io.github.jan-tennert.supabase", name = "auth-kt", version.ref = "supabase" }     # Auth v2
 supabase-postgrest = { group = "io.github.jan-tennert.supabase", name = "postgrest-kt", version.ref = "supabase" } # Postgrest v2
 supabase-realtime = { group = "io.github.jan-tennert.supabase", name = "realtime-kt", version.ref = "supabase" }  # Realtime v2 (Corrected group ID)
 # supabase-storage = { group = "io.github.jan-tennert.supabase", name = "storage-kt", version.ref = "supabase" } # Storage v2 (if needed)

@@ -5,30 +5,23 @@ import com.hypest.supermarketreceiptsapp.domain.model.Receipt
 import com.hypest.supermarketreceiptsapp.domain.repository.AuthRepository
 import com.hypest.supermarketreceiptsapp.domain.repository.ReceiptRepository
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.gotrue.auth
-import io.github.jan.supabase.gotrue.Auth // Auth v2 extension function
-import io.github.jan.supabase.postgrest.postgrest // Postgrest v2 extension function
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
-// import io.github.jan.supabase.postgrest.query.PostgrestQueryBuilder // Remove unused import
 import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
-// import io.github.jan.supabase.postgrest.query.filter.eq // Removing eq import again
-// import io.github.jan.supabase.postgrest.query.PostgrestResult // Not needed for decodeList
-// import io.github.jan.supabase.postgrest.request.PostgrestRequestBuilder // Not needed directly
-// import io.github.jan.supabase.postgrest.query.filter.FilterOperator // Not needed for string filter
 import io.github.jan.supabase.realtime.PostgresAction
-import io.github.jan.supabase.realtime.Realtime // Import Realtime module type
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
-import io.github.jan.supabase.realtime.realtime // Realtime v2 extension function
+import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class ReceiptRepositoryImpl @Inject constructor(
-    val supabaseClient: SupabaseClient,
+    private val supabaseClient: SupabaseClient,
     private val authRepository: AuthRepository, // Keep for now
     private val scope: CoroutineScope // Inject CoroutineScope
 ) : ReceiptRepository {
@@ -42,8 +35,7 @@ class ReceiptRepositoryImpl @Inject constructor(
     // Implementation for submitting URL and HTML (fetches userId internally)
     override suspend fun submitReceiptData(url: String, htmlContent: String): Result<Unit> {
         return try {
-            val currentUser = supabaseClient.auth.currentUserOrNull() // Use property
-            // directly in v2
+            val currentUser = supabaseClient.auth.currentUserOrNull()
                 ?: return Result.failure(IllegalStateException("User not logged in"))
             val userId = currentUser.id
 
@@ -98,7 +90,6 @@ class ReceiptRepositoryImpl @Inject constructor(
         Log.d(TAG, "getReceipts: User $userId logged in. Setting up realtime channel.")
         Log.d(TAG, "Realtime: Subscribing with filter for user_id = $userId")
 
-        // Use realtime extension function in v2
         val channel = supabaseClient.realtime.channel("receipts_user_$userId")
 
         // Launch subscribe in the injected scope
@@ -112,16 +103,13 @@ class ReceiptRepositoryImpl @Inject constructor(
             }
         }
 
-        // Use v2 postgresChangeFlow syntax directly
         return channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = RECEIPTS_TABLE
-            // Use string-based filter property for v2 realtime
-            filter = "user_id=eq.$userId"
+            filter(FilterOperation("user_id", FilterOperator.EQ, userId))
         }.onEach { action ->
             Log.d(TAG, "Realtime: Flow emitted action: $action")
         }.map { action ->
             Log.d(TAG, "Realtime: Mapping action details: $action")
-            // Make when exhaustive for v2 PostgresAction types
             when (action) {
                 is PostgresAction.Insert -> Log.d(TAG, "Realtime: Insert detected for user $userId")
                 is PostgresAction.Update -> Log.d(TAG, "Realtime: Update detected for user $userId")
@@ -155,7 +143,6 @@ class ReceiptRepositoryImpl @Inject constructor(
                      "store_name",
                      "uid",
                      "created_at"
-                     // Joining receipt_items might require a separate query in v2
                  )
             ) { // Start select lambda (request parameter)
                 // Use filter builder lambda with explicit FilterOperation

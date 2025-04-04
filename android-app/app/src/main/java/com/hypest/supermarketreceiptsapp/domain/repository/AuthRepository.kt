@@ -1,6 +1,6 @@
 package com.hypest.supermarketreceiptsapp.domain.repository
 
-import io.github.jan.supabase.gotrue.SessionStatus
+import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
