@@ -144,7 +144,6 @@ class ReceiptsViewModel @Inject constructor(
      init {
          authRepository.sessionStatus // Should now use the v2 SessionStatus from AuthRepository
              .onEach { status ->
-                 Log.d("MainViewModel", "Auth status changed: $status")
                  if (status is SessionStatus.Authenticated && pendingUrl != null) {
                      Log.d("MainViewModel", "User authenticated, processing pending receipt for URL: $pendingUrl")
                      processScannedData(pendingUrl!!, pendingHtml) // Pass stored data
