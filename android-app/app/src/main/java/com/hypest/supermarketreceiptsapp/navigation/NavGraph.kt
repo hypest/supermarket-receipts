@@ -12,10 +12,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.hypest.supermarketreceiptsapp.ui.screens.LoginScreen
-// import com.hypest.supermarketreceiptsapp.ui.screens.MainScreen // Removed
 import com.hypest.supermarketreceiptsapp.ui.screens.ReceiptsScreen // Import ReceiptsScreen
 import com.hypest.supermarketreceiptsapp.viewmodel.AuthViewModel // Import AuthViewModel
-import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.status.SessionStatus // v2 import
 
 @Composable
@@ -56,12 +54,11 @@ fun NavGraph(
         composable(route = Screen.Receipts.route) { backStackEntry -> // Get NavBackStackEntry
             // Scope ViewModels to the NavBackStackEntry
             val scopedAuthViewModel = hiltViewModel<AuthViewModel>(backStackEntry)
-            val receiptsViewModel = hiltViewModel<com.hypest.supermarketreceiptsapp.viewmodel.ReceiptsViewModel>(backStackEntry)
-            val mainViewModel = hiltViewModel<com.hypest.supermarketreceiptsapp.viewmodel.MainViewModel>(backStackEntry)
+            val receiptsViewModel = hiltViewModel<com.hypest.supermarketreceiptsapp
+                .viewmodel.ReceiptsViewModel>(backStackEntry)
 
             ReceiptsScreen(
                 receiptsViewModel = receiptsViewModel,
-                mainViewModel = mainViewModel,
                 authViewModel = scopedAuthViewModel // Pass the correctly scoped AuthViewModel
             )
         }

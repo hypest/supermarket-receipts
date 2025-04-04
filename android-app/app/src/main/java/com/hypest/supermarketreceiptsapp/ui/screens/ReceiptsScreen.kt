@@ -8,8 +8,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -33,12 +31,10 @@ import com.hypest.supermarketreceiptsapp.ui.components.HtmlExtractorWebView
 import com.hypest.supermarketreceiptsapp.ui.components.QrCodeScanner
 import com.hypest.supermarketreceiptsapp.ui.components.RequestCameraPermission
 import com.hypest.supermarketreceiptsapp.viewmodel.AuthViewModel
-import com.hypest.supermarketreceiptsapp.viewmodel.MainScreenState
-import com.hypest.supermarketreceiptsapp.viewmodel.MainViewModel
-import com.hypest.supermarketreceiptsapp.viewmodel.ReceiptsUiState
+import com.hypest.supermarketreceiptsapp.viewmodel.ReceiptsScreenState
+import com.hypest.supermarketreceiptsapp.viewmodel.ReceiptsListState
 import com.hypest.supermarketreceiptsapp.viewmodel.ReceiptsViewModel
 import java.text.NumberFormat
-import java.time.Instant // Keep for potential fallback or other uses if any
 import java.time.OffsetDateTime // Use OffsetDateTime for parsing
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -49,11 +45,10 @@ import java.util.Locale
 @Composable
 fun ReceiptsScreen(
     receiptsViewModel: ReceiptsViewModel = hiltViewModel(),
-    mainViewModel: MainViewModel = hiltViewModel(), // Inject MainViewModel
     authViewModel: AuthViewModel = hiltViewModel() // Inject AuthViewModel for logout
 ) {
-    val receiptsUiState by receiptsViewModel.uiState.collectAsStateWithLifecycle()
-    val mainScreenState by mainViewModel.screenState.collectAsStateWithLifecycle()
+    val receiptsListState by receiptsViewModel.receiptsListState.collectAsStateWithLifecycle()
+    val receiptsScreenState by receiptsViewModel.screenState.collectAsStateWithLifecycle()
     var selectedReceipt by remember { mutableStateOf<Receipt?>(null) }
     val context = LocalContext.current
 
@@ -63,16 +58,16 @@ fun ReceiptsScreen(
     RequestCameraPermission(
         context = context,
         onPermissionResult = { granted ->
-            mainViewModel.onPermissionResult(granted)
+            receiptsViewModel.onPermissionResult(granted)
         }
     )
 
     // Launch scanner when state becomes Scanning
-    if (mainScreenState == MainScreenState.Scanning) {
+    if (receiptsScreenState == ReceiptsScreenState.Scanning) {
         QrCodeScanner(
-            onQrCodeScanned = { url -> mainViewModel.onQrCodeScanned(url) },
-            onScanCancelled = { mainViewModel.resetToReadyState() }, // Go back to ready state on cancel
-            onScanError = { exception -> mainViewModel.onScanError(exception) }
+            onQrCodeScanned = { url -> receiptsViewModel.onQrCodeScanned(url) },
+            onScanCancelled = { receiptsViewModel.resetToReadyState() },
+            onScanError = { exception -> receiptsViewModel.onScanError(exception) }
         )
     }
 
@@ -92,8 +87,13 @@ fun ReceiptsScreen(
         },
         floatingActionButton = {
             // Show FAB only when ready to scan or if showing receipts list
-            if (mainScreenState == MainScreenState.ReadyToScan || mainScreenState is MainScreenState.Success || mainScreenState is MainScreenState.Error || mainScreenState == MainScreenState.CheckingPermission || mainScreenState is MainScreenState.NoPermission) {
-                 FloatingActionButton(onClick = { mainViewModel.startScanning() }) {
+            if (receiptsScreenState == ReceiptsScreenState.ReadyToScan || receiptsScreenState
+                        is
+                        ReceiptsScreenState.Success || receiptsScreenState is
+                        ReceiptsScreenState.Error || receiptsScreenState ==
+                ReceiptsScreenState.CheckingPermission || receiptsScreenState is
+                        ReceiptsScreenState.NoPermission) {
+                 FloatingActionButton(onClick = { receiptsViewModel.startScanning() }) {
                     Icon(Icons.Filled.Add, contentDescription = "Scan New Receipt")
                 }
             }
@@ -105,17 +105,18 @@ fun ReceiptsScreen(
                 .fillMaxSize()
         ) {
             // Content based on MainViewModel's state takes priority if active
-            when (val state = mainScreenState) {
-                MainScreenState.CheckingPermission -> {
+            when (val state = receiptsScreenState) {
+                ReceiptsScreenState.CheckingPermission -> {
                     // Show receipts list underneath? Or just loading? Let's show loading centered.
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                         Text("Checking permissions...", modifier = Modifier.padding(top = 60.dp))
                     }
                 }
-                is MainScreenState.NoPermission -> {
+                is ReceiptsScreenState.NoPermission -> {
                     // Show permission denied message over the receipts list
-                     ReceiptsListContent(receiptsUiState, selectedReceipt) { selectedReceipt = it } // Show list behind
+                     ReceiptsListContent(receiptsListState, selectedReceipt) {
+                         selectedReceipt = it } // Show list behind
                      Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.medium).padding(16.dp)) {
                             Text(state.message, color = MaterialTheme.colorScheme.error)
@@ -124,24 +125,27 @@ fun ReceiptsScreen(
                                 Text("Open Settings") // Placeholder
                             }
                              Spacer(modifier = Modifier.height(8.dp))
-                             Button(onClick = { mainViewModel.resetToReadyState() }) { // Allow retry/dismiss
+                             Button(onClick = { receiptsViewModel.resetToReadyState() }) {
+                                 // Allow retry/dismiss
                                 Text("Dismiss")
                             }
                         }
                     }
                 }
-                MainScreenState.Scanning -> {
+                ReceiptsScreenState.Scanning -> {
                     // Scanner overlay is handled by the QrCodeScanner composable launched via side effect
                     // Show the receipts list underneath subtly
-                    ReceiptsListContent(receiptsUiState, selectedReceipt) { selectedReceipt = it }
+                    ReceiptsListContent(receiptsListState, selectedReceipt) {
+                        selectedReceipt = it }
                     // Optionally add a scrim/message:
                     Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)), contentAlignment = Alignment.Center) {
                         Text("Scanner Active", color = Color.White, style = MaterialTheme.typography.headlineSmall)
                     }
                 }
-                 is MainScreenState.ExtractingHtml -> {
+                 is ReceiptsScreenState.ExtractingHtml -> {
                     // Show WebView for extraction, potentially blurring the background receipts
-                    ReceiptsListContent(receiptsUiState, selectedReceipt, modifier = Modifier.then(
+                    ReceiptsListContent(receiptsListState, selectedReceipt, modifier =
+                    Modifier.then(
                         if (state.showOverlay && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                             Modifier.blur(radius = 8.dp)
                         } else Modifier
@@ -150,9 +154,10 @@ fun ReceiptsScreen(
                     Box(modifier = Modifier.fillMaxSize()) { // Box for WebView and overlay
                         HtmlExtractorWebView(
                             url = state.url,
-                            onHtmlExtracted = { url, html -> mainViewModel.onHtmlExtracted(url, html) },
-                            onError = { url, error -> mainViewModel.onHtmlExtractionError(url, error) },
-                            onChallengeInteractionRequired = { mainViewModel.onChallengeInteractionRequired() },
+                            onHtmlExtracted = { url, html -> receiptsViewModel
+                                .onHtmlExtracted(url, html) },
+                            onError = { url, error -> receiptsViewModel.onHtmlExtractionError(url, error) },
+                            onChallengeInteractionRequired = { receiptsViewModel.onChallengeInteractionRequired() },
                             modifier = Modifier.fillMaxSize() // WebView fills the box
                         )
 
@@ -177,9 +182,9 @@ fun ReceiptsScreen(
                         }
                     }
                 }
-                is MainScreenState.Processing -> {
+                is ReceiptsScreenState.Processing -> {
                     // Show processing indicator over the receipts list
-                    ReceiptsListContent(receiptsUiState, selectedReceipt) { selectedReceipt = it } // Show list behind
+                    ReceiptsListContent(receiptsListState, selectedReceipt) { selectedReceipt = it } // Show list behind
                     Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
                          Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator()
@@ -188,25 +193,27 @@ fun ReceiptsScreen(
                         }
                     }
                 }
-                 MainScreenState.Success -> {
+                ReceiptsScreenState.Success -> {
                     // Show the main receipts list. A Snackbar could show success.
                     // Or briefly show a success message overlay? Let's stick to Snackbar for less intrusion.
                     // We need a ScaffoldState for Snackbar. Add later if needed.
                     LaunchedEffect(Unit) { // Reset state after success automatically
                         kotlinx.coroutines.delay(1500) // Show success briefly maybe? No, just reset.
-                        mainViewModel.resetToReadyState()
+                        receiptsViewModel.resetToReadyState()
                     }
-                     ReceiptsListContent(receiptsUiState, selectedReceipt) { selectedReceipt = it }
+                     ReceiptsListContent(receiptsListState, selectedReceipt) {
+                         selectedReceipt = it }
                      // TODO: Add Snackbar for "Receipt Processed Successfully!"
                 }
-                is MainScreenState.Error -> {
+                is ReceiptsScreenState.Error -> {
                     // Show error message over the receipts list
-                    ReceiptsListContent(receiptsUiState, selectedReceipt) { selectedReceipt = it } // Show list behind
+                    ReceiptsListContent(receiptsListState, selectedReceipt) {
+                        selectedReceipt = it } // Show list behind
                     Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
                          Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.errorContainer, shape = MaterialTheme.shapes.medium).padding(16.dp)) {
                             Text("Error: ${state.message}", color = MaterialTheme.colorScheme.onErrorContainer)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = { mainViewModel.resetToReadyState() }) {
+                            Button(onClick = { receiptsViewModel.resetToReadyState() }) {
                                 Text("Try Again")
                             }
                         }
@@ -214,7 +221,8 @@ fun ReceiptsScreen(
                 }
                 // Default case: ReadyToScan or other idle states - show the receipts list
                 else -> {
-                    ReceiptsListContent(receiptsUiState, selectedReceipt) { selectedReceipt = it }
+                    ReceiptsListContent(receiptsListState, selectedReceipt) {
+                        selectedReceipt = it }
                 }
             }
         }
@@ -224,7 +232,7 @@ fun ReceiptsScreen(
 // Extracted composable for the actual list/detail view
 @Composable
 fun ReceiptsListContent(
-    receiptsUiState: ReceiptsUiState,
+    receiptsUiState: ReceiptsListState,
     selectedReceipt: Receipt?,
     modifier: Modifier = Modifier, // Allow passing modifiers (e.g., for blur)
     onReceiptSelected: (Receipt?) -> Unit
