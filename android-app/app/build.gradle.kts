@@ -113,7 +113,6 @@ dependencies {
     androidTestImplementation(libs.hilt.android.testing) // Hilt testing library
 
     // Supabase v3 (Using version catalog and BOM)
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.0.0")) // Use direct BOM coordinates
     implementation(libs.supabase.auth)      // Include Supabase Auth
     implementation(libs.supabase.postgrest) // Include Supabase Postgrest
     implementation(libs.supabase.realtime)  // Include Supabase Realtime
