@@ -29,7 +29,6 @@ import com.hypest.supermarketreceiptsapp.domain.model.Receipt
 import com.hypest.supermarketreceiptsapp.domain.model.ReceiptItem
 import com.hypest.supermarketreceiptsapp.ui.components.HtmlExtractorWebView
 import com.hypest.supermarketreceiptsapp.ui.components.QrCodeScanner
-import com.hypest.supermarketreceiptsapp.ui.components.RequestCameraPermission
 import com.hypest.supermarketreceiptsapp.viewmodel.AuthViewModel
 import com.hypest.supermarketreceiptsapp.viewmodel.ReceiptsScreenState
 import com.hypest.supermarketreceiptsapp.viewmodel.ReceiptsListState
@@ -52,21 +51,13 @@ fun ReceiptsScreen(
     var selectedReceipt by remember { mutableStateOf<Receipt?>(null) }
     val context = LocalContext.current
 
-    // --- Side Effects from MainViewModel ---
-
-    // Request camera permission
-    RequestCameraPermission(
-        context = context,
-        onPermissionResult = { granted ->
-            receiptsViewModel.onPermissionResult(granted)
-        }
-    )
+    // --- Side Effects from ViewModel ---
 
     // Launch scanner when state becomes Scanning
     if (receiptsScreenState == ReceiptsScreenState.Scanning) {
         QrCodeScanner(
             onQrCodeScanned = { url -> receiptsViewModel.onQrCodeScanned(url) },
-            onScanCancelled = { receiptsViewModel.resetToReadyState() },
+            onScanCancelled = { receiptsViewModel.onScanCancelled() },
             onScanError = { exception -> receiptsViewModel.onScanError(exception) }
         )
     }
@@ -86,13 +77,10 @@ fun ReceiptsScreen(
             )
         },
         floatingActionButton = {
-            // Show FAB only when ready to scan or if showing receipts list
-            if (receiptsScreenState == ReceiptsScreenState.ReadyToScan || receiptsScreenState
-                        is
-                        ReceiptsScreenState.Success || receiptsScreenState is
-                        ReceiptsScreenState.Error || receiptsScreenState ==
-                ReceiptsScreenState.CheckingPermission || receiptsScreenState is
-                        ReceiptsScreenState.NoPermission) {
+            // Show FAB only when ready to scan or if showing receipts list (Success/Error states)
+            if (receiptsScreenState == ReceiptsScreenState.ReadyToScan ||
+                receiptsScreenState is ReceiptsScreenState.Success ||
+                receiptsScreenState is ReceiptsScreenState.Error) {
                  FloatingActionButton(onClick = { receiptsViewModel.startScanning() }) {
                     Icon(Icons.Filled.Add, contentDescription = "Scan New Receipt")
                 }
@@ -104,33 +92,12 @@ fun ReceiptsScreen(
                 .padding(paddingValues)
                 .fillMaxSize()
         ) {
-            // Content based on MainViewModel's state takes priority if active
+            // Content based on ViewModel's state takes priority if active
             when (val state = receiptsScreenState) {
-                ReceiptsScreenState.CheckingPermission -> {
-                    // Show receipts list underneath? Or just loading? Let's show loading centered.
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                        Text("Checking permissions...", modifier = Modifier.padding(top = 60.dp))
-                    }
-                }
-                is ReceiptsScreenState.NoPermission -> {
-                    // Show permission denied message over the receipts list
-                     ReceiptsListContent(receiptsListState, selectedReceipt) {
-                         selectedReceipt = it } // Show list behind
-                     Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.medium).padding(16.dp)) {
-                            Text(state.message, color = MaterialTheme.colorScheme.error)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = { /* TODO: Maybe link to app settings? */ }) {
-                                Text("Open Settings") // Placeholder
-                            }
-                             Spacer(modifier = Modifier.height(8.dp))
-                             Button(onClick = { receiptsViewModel.resetToReadyState() }) {
-                                 // Allow retry/dismiss
-                                Text("Dismiss")
-                            }
-                        }
-                    }
+                ReceiptsScreenState.ReadyToScan -> {
+                    // Default state: Show the receipts list
+                    ReceiptsListContent(receiptsListState, selectedReceipt) {
+                        selectedReceipt = it }
                 }
                 ReceiptsScreenState.Scanning -> {
                     // Scanner overlay is handled by the QrCodeScanner composable launched via side effect
@@ -199,11 +166,15 @@ fun ReceiptsScreen(
                     // We need a ScaffoldState for Snackbar. Add later if needed.
                     LaunchedEffect(Unit) { // Reset state after success automatically
                         kotlinx.coroutines.delay(1500) // Show success briefly maybe? No, just reset.
+                        // Reset state after success automatically
+                        // Consider showing a Snackbar instead of delaying and auto-resetting
+                        // For now, keep the auto-reset
+                        kotlinx.coroutines.delay(1500)
                         receiptsViewModel.resetToReadyState()
                     }
                      ReceiptsListContent(receiptsListState, selectedReceipt) {
                          selectedReceipt = it }
-                     // TODO: Add Snackbar for "Receipt Processed Successfully!"
+                     // TODO: Add Snackbar for "Receipt Processed Successfully!" using ScaffoldState
                 }
                 is ReceiptsScreenState.Error -> {
                     // Show error message over the receipts list
@@ -219,11 +190,7 @@ fun ReceiptsScreen(
                         }
                     }
                 }
-                // Default case: ReadyToScan or other idle states - show the receipts list
-                else -> {
-                    ReceiptsListContent(receiptsListState, selectedReceipt) {
-                        selectedReceipt = it }
-                }
+                // Note: ReadyToScan is handled explicitly above now. No 'else' needed if all states covered.
             }
         }
     }

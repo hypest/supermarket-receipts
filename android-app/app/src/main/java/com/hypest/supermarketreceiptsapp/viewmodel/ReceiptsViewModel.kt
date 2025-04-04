@@ -14,16 +14,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlinx.coroutines.channels.BufferOverflow
 
-// Unified state representation for the Main Screen
+// Unified state representation for the Receipts Screen
 sealed class ReceiptsScreenState {
-    object CheckingPermission : ReceiptsScreenState()
-    data class NoPermission(val message: String) : ReceiptsScreenState()
-    object ReadyToScan : ReceiptsScreenState()
-    object Scanning : ReceiptsScreenState()
-    // Add showOverlay flag, defaulting to true
+    data object ReadyToScan : ReceiptsScreenState()
+    data object Scanning : ReceiptsScreenState()
     data class ExtractingHtml(val url: String, val showOverlay: Boolean = true) : ReceiptsScreenState()
     data class Processing(val url: String, val html: String?) : ReceiptsScreenState()
-    object Success : ReceiptsScreenState()
+    data object Success : ReceiptsScreenState()
     data class Error(val message: String) : ReceiptsScreenState()
 }
 
@@ -46,7 +43,8 @@ class ReceiptsViewModel @Inject constructor(
         private const val TAG = "ReceiptsViewModel" // Add TAG definition
     }
 
-    private val _screenState = MutableStateFlow<ReceiptsScreenState>(ReceiptsScreenState.CheckingPermission)
+    // Initial state is ReadyToScan as permission is handled by the scanner library
+    private val _screenState = MutableStateFlow<ReceiptsScreenState>(ReceiptsScreenState.ReadyToScan)
     val screenState: StateFlow<ReceiptsScreenState> = _screenState.asStateFlow()
 
     // Convert the Flow<Result<List<Receipt>>> directly into StateFlow<ReceiptsUiState>
@@ -84,34 +82,10 @@ class ReceiptsViewModel @Inject constructor(
     )
     private val scanEventFlow = _scanEventFlow.asSharedFlow()
 
-
-    // Keep track of actual permission status internally if needed for logic,
-    // but UI state is driven by _screenState
-    private var hasCameraPermissionInternal = false
-
-    fun onPermissionResult(isGranted: Boolean) {
-        hasCameraPermissionInternal = isGranted
-        if (isGranted) {
-            // Only transition to ReadyToScan if we were checking or previously denied
-            if (_screenState.value is ReceiptsScreenState.CheckingPermission ||
-                _screenState.value is ReceiptsScreenState.NoPermission) {
-                 _screenState.value = ReceiptsScreenState.ReadyToScan
-            }
-            // If permission granted while in another state (e.g. Error), stay there until user action
-        } else {
-            _screenState.value = ReceiptsScreenState.NoPermission("Camera permission is required to scan QR codes.")
-        }
-    }
-
     // Called when the user clicks the "Scan QR Code" button
     fun startScanning() {
-        if (hasCameraPermissionInternal) {
-            _screenState.value = ReceiptsScreenState.Scanning
-        } else {
-             // Should ideally not happen if button is only shown when permission granted, but handle defensively
-             _screenState.value = ReceiptsScreenState.NoPermission("Camera permission is required.")
-             // Consider triggering permission request again here
-        }
+        // Directly transition to Scanning state. Permission handled by the scanner library.
+        _screenState.value = ReceiptsScreenState.Scanning
     }
 
     // Called by the QrCodeScanner component when a code is successfully scanned
@@ -296,19 +270,14 @@ class ReceiptsViewModel @Inject constructor(
     fun onChallengeInteractionRequired() {
         if (_screenState.value is ReceiptsScreenState.ExtractingHtml) {
             val currentState = _screenState.value as ReceiptsScreenState.ExtractingHtml
-            Log.d("MainViewModel", "Challenge interaction required for ${currentState.url}. Hiding overlay.")
+            Log.d(TAG, "Challenge interaction required for ${currentState.url}. Hiding overlay.")
             _screenState.value = currentState.copy(showOverlay = false)
         }
     }
 
-
-    // Called when user clicks "Scan Another" or "Try Again"
+    // Called when user clicks "Scan Another" or "Try Again" from Success/Error state
     fun resetToReadyState() {
-        if (hasCameraPermissionInternal) {
-            _screenState.value = ReceiptsScreenState.ReadyToScan
-        } else {
-            // If permission somehow got revoked, reflect that
-             _screenState.value = ReceiptsScreenState.NoPermission("Camera permission is required.")
-        }
+        // Simply go back to the ready state
+        _screenState.value = ReceiptsScreenState.ReadyToScan
     }
 }
