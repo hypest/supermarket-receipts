@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.ExitToApp // For Logout icon
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.launch // Needed for launching snackbar coroutine
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,6 +51,8 @@ fun ReceiptsScreen(
     val receiptsScreenState by receiptsViewModel.screenState.collectAsStateWithLifecycle()
     var selectedReceipt by remember { mutableStateOf<Receipt?>(null) }
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() } // Add SnackbarHostState
+    val scope = rememberCoroutineScope() // Coroutine scope for launching snackbar
 
     // --- Side Effects from ViewModel ---
 
@@ -76,6 +79,7 @@ fun ReceiptsScreen(
                 }
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }, // Add SnackbarHost
         floatingActionButton = {
             // Show FAB only when ready to scan or if showing receipts list (Success/Error states)
             if (receiptsScreenState == ReceiptsScreenState.ReadyToScan ||
@@ -162,19 +166,19 @@ fun ReceiptsScreen(
                 }
                 ReceiptsScreenState.Success -> {
                     // Show the main receipts list. A Snackbar could show success.
-                    // Or briefly show a success message overlay? Let's stick to Snackbar for less intrusion.
-                    // We need a ScaffoldState for Snackbar. Add later if needed.
-                    LaunchedEffect(Unit) { // Reset state after success automatically
-                        kotlinx.coroutines.delay(1500) // Show success briefly maybe? No, just reset.
-                        // Reset state after success automatically
-                        // Consider showing a Snackbar instead of delaying and auto-resetting
-                        // For now, keep the auto-reset
-                        kotlinx.coroutines.delay(1500)
-                        receiptsViewModel.resetToReadyState()
+                    // Show the main receipts list and trigger the Snackbar
+                    LaunchedEffect(snackbarHostState) { // Use snackbarHostState as key
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = "Receipt processed successfully!",
+                                duration = SnackbarDuration.Short
+                            )
+                            // Reset state after showing snackbar
+                            receiptsViewModel.resetToReadyState()
+                        }
                     }
                      ReceiptsListContent(receiptsListState, selectedReceipt) {
                          selectedReceipt = it }
-                     // TODO: Add Snackbar for "Receipt Processed Successfully!" using ScaffoldState
                 }
                 is ReceiptsScreenState.Error -> {
                     // Show error message over the receipts list
