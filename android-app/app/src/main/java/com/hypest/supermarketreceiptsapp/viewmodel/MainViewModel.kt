@@ -81,8 +81,6 @@ class MainViewModel @Inject constructor(
             // Store data and wait for auth confirmation before processing
             pendingUrl = url
             pendingHtml = null
-            _screenState.value = MainScreenState.Processing(url, null) // Show processing state
-            // processScannedData(url, null) // Don't call directly, wait for auth state
         }
     }
 
@@ -213,7 +211,7 @@ class MainViewModel @Inject constructor(
     // Called when user clicks "Scan Another" or "Try Again"
     fun resetToReadyState() {
         if (hasCameraPermissionInternal) {
-            _screenState.value = MainScreenState.Scanning
+            _screenState.value = MainScreenState.ReadyToScan
         } else {
             // If permission somehow got revoked, reflect that
              _screenState.value = MainScreenState.NoPermission("Camera permission is required.")
