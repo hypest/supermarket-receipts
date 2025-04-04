@@ -8,11 +8,11 @@ import com.hypest.supermarketreceiptsapp.domain.repository.AuthRepository
 import com.hypest.supermarketreceiptsapp.domain.repository.ReceiptRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.jan.supabase.auth.status.SessionStatus
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.* // Import necessary flow operators
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.channels.BufferOverflow
 
 // Unified state representation for the Main Screen
 sealed class ReceiptsScreenState {
@@ -26,6 +26,9 @@ sealed class ReceiptsScreenState {
     object Success : ReceiptsScreenState()
     data class Error(val message: String) : ReceiptsScreenState()
 }
+
+// Event to represent scanned data
+private data class ScanEvent(val url: String, val html: String? = null)
 
 data class ReceiptsListState(
     val isLoading: Boolean = false,
@@ -74,9 +77,13 @@ class ReceiptsViewModel @Inject constructor(
             initialValue = ReceiptsListState(isLoading = true) // Start with loading state
         )
 
-    // Store pending data while waiting for auth
-    private var pendingUrl: String? = null
-    private var pendingHtml: String? = null
+    // Flow to handle scan events, ensuring only the latest is processed if auth is delayed
+    private val _scanEventFlow = MutableSharedFlow<ScanEvent>(
+        replay = 1, // Keep the last event for late subscribers (like auth state change)
+        onBufferOverflow = BufferOverflow.DROP_OLDEST // Drop older events if buffer overflows
+    )
+    private val scanEventFlow = _scanEventFlow.asSharedFlow()
+
 
     // Keep track of actual permission status internally if needed for logic,
     // but UI state is driven by _screenState
@@ -119,9 +126,10 @@ class ReceiptsViewModel @Inject constructor(
             Log.d("MainViewModel", "Skipping HTML extraction, transitioning directly to Processing state for URL: $url")
             // For providers like Entersoft, process immediately without HTML
             _screenState.value = ReceiptsScreenState.Processing(url, null) // Pass null for HTML
-            // Store data and wait for auth confirmation before processing
-            pendingUrl = url
-            pendingHtml = null
+            // Emit event to the flow
+            viewModelScope.launch {
+                _scanEventFlow.emit(ScanEvent(url = url, html = null))
+            }
         }
     }
 
@@ -133,59 +141,105 @@ class ReceiptsViewModel @Inject constructor(
             return
         }
         Log.d("MainViewModel", "HTML extracted (length: ${html.length}), transitioning to Processing state for URL: $url")
-        // Store data and wait for auth confirmation before processing
-        pendingUrl = url
-        pendingHtml = html
         _screenState.value = ReceiptsScreenState.Processing(url, html) // Show processing state
-        // processScannedData(url, html) // Don't call directly, wait for auth state
+        // Emit event to the flow
+        viewModelScope.launch {
+            _scanEventFlow.emit(ScanEvent(url = url, html = html))
+        }
     }
 
-     // Observe auth status and process pending data when authenticated
-     init {
-         authRepository.sessionStatus // Should now use the v2 SessionStatus from AuthRepository
-             .onEach { status ->
-                 if (status is SessionStatus.Authenticated && pendingUrl != null) {
-                     Log.d("MainViewModel", "User authenticated, processing pending receipt for URL: $pendingUrl")
-                     processScannedData(pendingUrl!!, pendingHtml) // Pass stored data
-                     // Clear pending data after processing attempt starts
-                     pendingUrl = null
-                     pendingHtml = null
-                 } else if (status is SessionStatus.NotAuthenticated && _screenState.value is ReceiptsScreenState.Processing) { // Check v2 NotAuthenticated state
-                     // Handle case where user logs out while processing was pending
-                     Log.w("MainViewModel", "User logged out while receipt processing was pending.")
-                     _screenState.value = ReceiptsScreenState.Error("User logged out before receipt could be saved.")
-                     pendingUrl = null
-                     pendingHtml = null
-                 }
-             }
-             .launchIn(viewModelScope)
-     }
-
-
-    // Central function to handle submitting data to the repository
-    // Now called only when auth state is confirmed Authenticated and pending data exists
-    private fun processScannedData(url: String, html: String?) {
-         viewModelScope.launch {
-             // We know user is authenticated here because this is only called from the observer
-            Log.d("MainViewModel", "Processing receipt data: URL=$url, HasHTML=${html != null}")
-
-            Log.d("MainViewModel", "Processing receipt data: URL=$url, HasHTML=${html != null}") // Removed UserID from log
-
-            // Choose repository function based on whether HTML was extracted
-            val result = if (html != null) {
-                receiptRepository.submitReceiptData(url, html) // Call without userId
-            } else {
-                receiptRepository.saveReceiptUrl(url) // Call without userId
+    // Observe auth status and combine it with the latest scan event
+    init {
+        viewModelScope.launch {
+            // Combine the latest scan event with the auth status.
+            // `combine` ensures we only proceed when both flows have emitted at least once
+            // and triggers whenever either flow emits a new value.
+            scanEventFlow.combine(authRepository.sessionStatus) { event, status ->
+                Pair(event, status)
             }
+                // We only care about processing when the user is authenticated.
+                .filter { (_, status) -> status is SessionStatus.Authenticated }
+                // Avoid processing the same event multiple times if auth status flaps quickly
+                .distinctUntilChangedBy { (event, _) -> event }
+                .collectLatest { (event, status) ->
+                    // Double-check status just in case, though filter should handle it.
+                    if (status is SessionStatus.Authenticated) {
+                        Log.d(TAG, "User authenticated, processing event for URL: ${event.url}")
+                        // Check if the current state is Processing, otherwise the event might be stale
+                        // (e.g., user scanned, logged out, logged back in - we shouldn't process the old scan)
+                        // Or maybe we *should* process it? Let's assume yes for now, the replay=1 handles this.
+                        if (_screenState.value is ReceiptsScreenState.Processing &&
+                            (_screenState.value as ReceiptsScreenState.Processing).url == event.url) {
 
-            result.onSuccess {
-                Log.d("MainViewModel", "Receipt data processed successfully for URL: $url")
-                _screenState.value = ReceiptsScreenState.Success
-            }.onFailure { error ->
-                Log.e("MainViewModel", "Error processing receipt data for URL: $url", error)
-                _screenState.value = ReceiptsScreenState.Error(error.message ?: "Failed to process receipt data.")
-            }
+                            // Call the suspend function and wait for its result
+                            val result = processScannedData(event.url, event.html)
+
+                            // Update state based on the result *within* the collectLatest block
+                            result.onSuccess {
+                                Log.d(TAG, "Receipt data processed successfully (within collectLatest) for URL: ${event.url}")
+                                // Only transition from Processing to Success/Error
+                                if (_screenState.value is ReceiptsScreenState.Processing && (_screenState.value as ReceiptsScreenState.Processing).url == event.url) {
+                                    _screenState.value = ReceiptsScreenState.Success
+                                }
+                            }.onFailure { error ->
+                                Log.e(TAG, "Error processing receipt data (within collectLatest) for URL: ${event.url}", error)
+                                // Only transition from Processing to Success/Error
+                                if (_screenState.value is ReceiptsScreenState.Processing && (_screenState.value as ReceiptsScreenState.Processing).url == event.url) {
+                                    _screenState.value = ReceiptsScreenState.Error(error.message ?: "Failed to process receipt data.")
+                                }
+                            }
+                            // Consume the event? Replay=1 handles overwriting.
+                            // If double processing is an issue, more complex state management or event clearing needed.
+                            // but SharedFlow with replay=1 and collectLatest is often sufficient.
+                        } else {
+                             Log.w(TAG, "Auth confirmed, but current state (${_screenState.value}) doesn't match pending event URL (${event.url}). Ignoring stale event.")
+                        }
+                    }
+                }
         }
+
+        // Also handle the case where the user logs out *while* processing is pending
+        viewModelScope.launch {
+            authRepository.sessionStatus
+                .filter { it is SessionStatus.NotAuthenticated }
+                .collect {
+                    // If we were in a processing state, the user logged out before it could be saved.
+                    if (_screenState.value is ReceiptsScreenState.Processing) {
+                        Log.w(TAG, "User logged out while receipt processing was pending.")
+                        _screenState.value = ReceiptsScreenState.Error("User logged out before receipt could be saved.")
+                        // Clear any pending event in the flow? Replay cache makes this tricky without
+                        // emitting a "clear" event or using a different mechanism.
+                        // For now, the combine logic will prevent processing if auth fails.
+                    }
+                }
+        }
+    }
+
+
+    // Central suspend function to handle submitting data to the repository
+    // Returns Result<Unit> to indicate success or failure
+    private suspend fun processScannedData(url: String, html: String?): Result<Unit> {
+        // We know user is authenticated here because this is only called from the observer logic
+        Log.d(TAG, "Processing receipt data: URL=$url, HasHTML=${html != null}")
+
+        // Choose repository function based on whether HTML was extracted
+        // Assuming repository functions return Result directly or are suspend fun returning Unit/throwing Exception
+        // Let's wrap in runCatching for safety if they aren't returning Result already.
+        // NOTE: If repository functions are already suspend fun returning Result, runCatching is redundant.
+        // Adjust based on actual ReceiptRepository implementation.
+        return runCatching { // Use runCatching to ensure a Result is always returned
+            if (html != null) {
+                // Assuming submitReceiptData is suspend or returns Result
+                receiptRepository.submitReceiptData(url, html).getOrThrow() // Use getOrThrow if it returns Result
+            } else {
+                // Assuming saveReceiptUrl is suspend or returns Result
+                receiptRepository.saveReceiptUrl(url).getOrThrow() // Use getOrThrow if it returns Result
+            }
+            // If repository functions are suspend fun returning Unit, the above lines simplify:
+            // if (html != null) receiptRepository.submitReceiptData(url, html)
+            // else receiptRepository.saveReceiptUrl(url)
+        }
+        // runCatching automatically wraps success (Unit) or failure (Exception) into a Result<Unit>
     }
 
     // Called by the QrCodeScanner component when the user cancels the scan
