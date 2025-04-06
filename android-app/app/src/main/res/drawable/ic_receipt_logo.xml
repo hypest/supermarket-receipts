@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24.0"
+    android:viewportHeight="24.0"
+    android:tint="@color/design_blue">
+    <!-- Use the blue color -->
+
+    <!-- Outer receipt shape with jagged top -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M19.5,3.5 L18,2 L16.5,3.5 L15,2 L13.5,3.5 L12,2 L10.5,3.5 L9,2 L7.5,3.5 L6,2 L4.5,3.5 L3,2v18.5c0,0.83 0.67,1.5 1.5,1.5h15c0.83,0 1.5,-0.67 1.5,-1.5V2L19.5,3.5zM19,19H5V5h14v14z"/>
+    <!-- First line -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9,7h6v2h-6z"/>
+    <!-- Second line -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9,11h6v2h-6z"/>
+    <!-- Third line -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M9,15h6v2h-6z"/>
+</vector>
