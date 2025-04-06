@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.flow.map // Ensure map is imported
 import kotlinx.coroutines.channels.BufferOverflow
 
 // Unified state representation for the Receipts Screen
@@ -47,9 +48,17 @@ class ReceiptsViewModel @Inject constructor(
     private val _screenState = MutableStateFlow<ReceiptsScreenState>(ReceiptsScreenState.ReadyToScan)
     val screenState: StateFlow<ReceiptsScreenState> = _screenState.asStateFlow()
 
+    // Flow for pending scan count
+    val pendingScanCount: StateFlow<Int> = receiptRepository.getPendingScanCountFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0 // Start with 0 pending scans
+        )
+
     // Convert the Flow<Result<List<Receipt>>> directly into StateFlow<ReceiptsUiState>
     val receiptsListState: StateFlow<ReceiptsListState> = receiptRepository.getReceipts()
-        .map { result -> // Map Result<List<Receipt>> to ReceiptsUiState
+        .map { result -> // Map Result<List<Receipt>> to ReceiptsListState
             result.fold(
                 onSuccess = { receipts ->
                     ReceiptsListState(isLoading = false, receipts = receipts, error = null)

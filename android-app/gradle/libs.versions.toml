@@ -18,6 +18,9 @@ ktor = "3.0.0" # Ktor version compatible with Supabase v2
 okhttp = "4.12.0" # OkHttp version (likely compatible)
 kotlinxSerialization = "1.7.3"
 playServicesCodeScanner = "16.1.0" # Kotlinx Serialization version
+room = "2.6.1" # Room version
+work = "2.9.0" # WorkManager version (Reverted)
+hiltWork = "1.2.0" # Hilt WorkManager Integration version (Reverted)
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,7 +42,9 @@ androidx-material-icons-extended = { group = "androidx.compose.material", name =
 
 # Hilt
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
-hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref ="hiltWork" }
+hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWork" } # Hilt WorkManager Integration (Reverted)
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version = "1.2.0" } # Check for latest version if needed
 hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
 
@@ -51,6 +56,14 @@ supabase-postgrest = { group = "io.github.jan-tennert.supabase", name = "postgre
 supabase-realtime = { group = "io.github.jan-tennert.supabase", name = "realtime-kt", version.ref = "supabase" }  # Realtime v2 (Corrected group ID)
 # supabase-storage = { group = "io.github.jan-tennert.supabase", name = "storage-kt", version.ref = "supabase" } # Storage v2 (if needed)
 # Note: Removed supabase-storage alias as it wasn't used before
+
+# Room Persistence
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+
+# WorkManager (Reverted)
+work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" } # Simplified alias
 
 # Ktor Client (Needed by Supabase v2 - using Ktor v2.3.12)
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }

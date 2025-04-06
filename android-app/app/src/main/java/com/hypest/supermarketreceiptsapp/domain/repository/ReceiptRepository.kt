@@ -15,4 +15,11 @@ interface ReceiptRepository {
 
     // Function to fetch a single receipt by its ID
     suspend fun getReceiptById(id: String): Receipt? // Returns nullable Receipt or throws exception
+
+    // --- Functions for syncing pending scans (called by Worker) ---
+    suspend fun syncPendingScanToServer(url: String, htmlContent: String, userId: String): Result<Unit>
+    suspend fun syncPendingScanUrlToServer(url: String, userId: String): Result<Unit>
+
+    // Function to observe the count of pending scans
+    fun getPendingScanCountFlow(): Flow<Int>
 }

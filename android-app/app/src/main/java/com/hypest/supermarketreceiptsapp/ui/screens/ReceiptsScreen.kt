@@ -51,6 +51,7 @@ fun ReceiptsScreen(
 ) {
     val receiptsListState by receiptsViewModel.receiptsListState.collectAsStateWithLifecycle()
     val receiptsScreenState by receiptsViewModel.screenState.collectAsStateWithLifecycle()
+    val pendingCount by receiptsViewModel.pendingScanCount.collectAsStateWithLifecycle() // Collect pending count
     val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("Date") } // Track selected filter
@@ -99,6 +100,16 @@ fun ReceiptsScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 shape = RoundedCornerShape(28.dp) // Rounded corners like the design
             )
+
+            // Optional: Display Pending Scan Count
+            if (pendingCount > 0) {
+                Text(
+                    text = "$pendingCount scan(s) waiting to upload...",
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             // 2. Filter Chips
             Row(

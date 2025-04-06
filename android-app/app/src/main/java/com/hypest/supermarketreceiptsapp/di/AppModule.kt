@@ -1,6 +1,12 @@
 package com.hypest.supermarketreceiptsapp.di
 
+import android.app.Application
 import android.content.Context
+import android.net.ConnectivityManager // Import ConnectivityManager
+import androidx.room.Room
+import com.hypest.supermarketreceiptsapp.data.local.AppDatabase
+import com.hypest.supermarketreceiptsapp.data.local.PendingScanDao // Import new DAO
+import com.hypest.supermarketreceiptsapp.data.local.ReceiptDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -56,5 +62,39 @@ object AppModule {
             }
             // install(Storage) { ... } // Install Storage if needed
         }
+    }
+
+    // Provide Room Database instance
+    @Provides
+    @Singleton
+    fun provideAppDatabase(app: Application): AppDatabase {
+        return Room.databaseBuilder(
+            app,
+            AppDatabase::class.java,
+            AppDatabase.DATABASE_NAME
+        )
+        .fallbackToDestructiveMigration() // Add fallback migration
+        .build()
+    }
+
+    // Provide ReceiptDao instance from the database
+    @Provides
+    @Singleton
+    fun provideReceiptDao(db: AppDatabase): ReceiptDao {
+        return db.receiptDao()
+    }
+
+    // Provide PendingScanDao instance from the database
+    @Provides
+    @Singleton
+    fun providePendingScanDao(db: AppDatabase): PendingScanDao {
+        return db.pendingScanDao()
+    }
+
+    // Provide ConnectivityManager instance
+    @Provides
+    @Singleton
+    fun provideConnectivityManager(@ApplicationContext context: Context): ConnectivityManager {
+        return context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     }
 }

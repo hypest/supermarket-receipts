@@ -1,6 +1,11 @@
 package com.hypest.supermarketreceiptsapp
 
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,19 +20,22 @@ import androidx.navigation.compose.rememberNavController
 import com.hypest.supermarketreceiptsapp.navigation.NavGraph // Import NavGraph
 // Removed Preview import as Greeting is removed
 import com.hypest.supermarketreceiptsapp.ui.theme.SupermarketReceiptsAppTheme
-import com.hypest.supermarketreceiptsapp.viewmodel.AuthViewModel // Import AuthViewModel
+import com.hypest.supermarketreceiptsapp.viewmodel.AuthViewModel
 import dagger.hilt.android.AndroidEntryPoint
-// Removed SupabaseClient import
-import javax.inject.Inject // Keep Inject if other things are injected, otherwise remove
+import javax.inject.Inject
 
 
-@AndroidEntryPoint // Add Hilt entry point annotation
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    // Removed SupabaseClient injection
+    @Inject // Inject ConnectivityManager
+    lateinit var connectivityManager: ConnectivityManager
+
+    private lateinit var networkCallback: ConnectivityManager.NetworkCallback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setupNetworkCallback()
         enableEdgeToEdge()
         setContent {
             SupermarketReceiptsAppTheme {
@@ -41,6 +49,38 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
-// Removed Greeting and GreetingPreview composables
+    private fun setupNetworkCallback() {
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                // Check if connection actually has internet capability
+                val capabilities = connectivityManager.getNetworkCapabilities(network)
+                val hasInternet = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+                if (hasInternet) {
+                    runOnUiThread { // Show Toast on UI thread
+                        Toast.makeText(applicationContext, "Network connection available.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+
+            override fun onLost(network: Network) {
+                super.onLost(network)
+                runOnUiThread { // Show Toast on UI thread
+                    Toast.makeText(applicationContext, "Network connection lost.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        val networkRequest = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) // Monitor internet capability
+            .build()
+        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Unregister callback to prevent leaks
+        connectivityManager.unregisterNetworkCallback(networkCallback)
+    }
+}

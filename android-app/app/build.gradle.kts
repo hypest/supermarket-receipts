@@ -5,9 +5,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.hilt) // Add Hilt plugin
+    alias(libs.plugins.hilt) // Keep Hilt plugin applied here
     alias(libs.plugins.kotlin.serialization) // Add Kotlin Serialization plugin
     kotlin("kapt") // Add kapt for Hilt
+    id("com.google.devtools.ksp") version "2.0.0-1.0.21" // Add KSP plugin
 }
 
 // Load secrets from secrets.properties
@@ -152,4 +153,15 @@ dependencies {
 
     // Core library desugaring dependency
     coreLibraryDesugaring(libs.android.desugarJdkLibs) // Uncommented
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler) // Use ksp instead of kapt for Room
+
+    // WorkManager (Reverted - Build Issues)
+    implementation(libs.work.runtime.ktx)
+    implementation(libs.hilt.work)
+    kapt(libs.hilt.android.compiler)
+    kapt(libs.hilt.compiler)
 }
