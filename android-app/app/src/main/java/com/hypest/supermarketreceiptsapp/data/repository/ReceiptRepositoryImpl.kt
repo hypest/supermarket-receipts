@@ -75,6 +75,50 @@ class ReceiptRepositoryImpl @Inject constructor(
         }
     }
 
+    // Implementation for fetching a single receipt by ID
+    override suspend fun getReceiptById(id: String): Receipt? {
+        return try {
+            val currentUser = supabaseClient.auth.currentUserOrNull()
+                ?: throw IllegalStateException("User not logged in")
+            val userId = currentUser.id
+
+            Log.d(TAG, "getReceiptById: Fetching receipt with ID: $id for user: $userId")
+
+            // Query for the specific receipt and its items
+            val queryResult = supabaseClient.postgrest[RECEIPTS_TABLE].select(
+                columns = Columns.list(
+                    "id",
+                    "receipt_date",
+                    "total_amount",
+                    "store_name",
+                    "uid",
+                    "created_at",
+                    "receipt_items(id, name, quantity, price)" // Use standard FK select instead of inner join
+                )
+            ) {
+                filter {
+                    eq("id", id)
+                    eq("user_id", userId) // Ensure the receipt belongs to the current user
+                }
+                limit(1) // We only expect one result
+            }
+            .decodeList<Receipt>() // Decode into a List
+
+            val receipt = queryResult.firstOrNull() // Get the first element, or null if list is empty
+
+            if (receipt == null) {
+                Log.w(TAG, "getReceiptById: Receipt with ID $id not found for user $userId.")
+            } else {
+                Log.d(TAG, "getReceiptById: Successfully fetched receipt with ID $id for user $userId.")
+            }
+            receipt // Return the single receipt or null
+        } catch (e: Exception) {
+            Log.e(TAG, "getReceiptById: Error fetching receipt with ID $id. Exception: ${e::class.simpleName}, Message: ${e.message}", e)
+            null // Return null in case of error
+        }
+    }
+
+
     // Implementation for fetching receipts using Realtime (simplified - removed sessionStatus check)
     override fun getReceipts(): Flow<Result<List<Receipt>>> {
         Log.d(TAG, "getReceipts being called (simplified)")

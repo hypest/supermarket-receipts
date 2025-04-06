@@ -12,4 +12,7 @@ interface ReceiptRepository {
 
     // Function to fetch all processed receipts for the current user (Flow handles suspension)
     fun getReceipts(): Flow<Result<List<Receipt>>>
+
+    // Function to fetch a single receipt by its ID
+    suspend fun getReceiptById(id: String): Receipt? // Returns nullable Receipt or throws exception
 }

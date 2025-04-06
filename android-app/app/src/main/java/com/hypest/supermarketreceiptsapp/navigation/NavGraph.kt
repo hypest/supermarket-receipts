@@ -9,9 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel // Import hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.hypest.supermarketreceiptsapp.ui.screens.LoginScreen
+import com.hypest.supermarketreceiptsapp.ui.screens.ReceiptDetailScreen // Import ReceiptDetailScreen (will be created)
 import com.hypest.supermarketreceiptsapp.ui.screens.ReceiptsScreen // Import ReceiptsScreen
 import com.hypest.supermarketreceiptsapp.viewmodel.AuthViewModel // Import AuthViewModel
 import io.github.jan.supabase.auth.status.SessionStatus // v2 import
@@ -59,9 +62,33 @@ fun NavGraph(
 
             ReceiptsScreen(
                 receiptsViewModel = receiptsViewModel,
-                authViewModel = scopedAuthViewModel // Pass the correctly scoped AuthViewModel
+                authViewModel = scopedAuthViewModel, // Pass the correctly scoped AuthViewModel
+                // Add navigation callback for clicking a receipt
+                onReceiptClick = { receiptId ->
+                    navController.navigate(Screen.ReceiptDetail.createRoute(receiptId))
+                }
             )
         }
-        // Add other destinations later
+        // Add Receipt Detail Screen destination
+        composable(
+            route = Screen.ReceiptDetail.route,
+            arguments = listOf(navArgument("receiptId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val receiptId = backStackEntry.arguments?.getString("receiptId")
+            // Ensure receiptId is not null before proceeding
+            if (receiptId != null) {
+                ReceiptDetailScreen(
+                    receiptId = receiptId,
+                    navController = navController
+                    // ViewModel will be injected via hiltViewModel inside the screen
+                )
+            } else {
+                // Handle error: receiptId is null, maybe navigate back or show error
+                // For now, just navigate back
+                LaunchedEffect(Unit) {
+                    navController.popBackStack()
+                }
+            }
+        }
     }
 }
