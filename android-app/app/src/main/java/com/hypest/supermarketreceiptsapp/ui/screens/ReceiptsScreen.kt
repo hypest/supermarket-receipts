@@ -6,7 +6,9 @@ import androidx.compose.animation.AnimatedVisibility // Keep specific import
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border // Import border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme // Import theme check
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -365,15 +367,29 @@ fun ReceiptListItem(
     receipt: Receipt,
     onClick: () -> Unit
 ) {
+    val isDark = isSystemInDarkTheme()
+    val cardModifier = Modifier
+        .fillMaxWidth()
+        .clickable(onClick = onClick)
+        .then(
+            // Add border only in dark mode
+            if (isDark) {
+                Modifier.border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), // Subtle outline color
+                    shape = RoundedCornerShape(12.dp)
+                )
+            } else Modifier
+        )
+
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        modifier = cardModifier,
         shape = RoundedCornerShape(12.dp), // More rounded corners like design
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface // Use surface color, elevation adds distinction
+            containerColor = MaterialTheme.colorScheme.surface // Use surface color
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp) // Subtle elevation
+        // Reduce or remove elevation in dark mode if border is present
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 2.dp)
     ) {
         Row(
             modifier = Modifier

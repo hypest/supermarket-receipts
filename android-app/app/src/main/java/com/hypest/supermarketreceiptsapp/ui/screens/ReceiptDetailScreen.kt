@@ -108,9 +108,10 @@ fun ReceiptDetailContent(receipt: Receipt) {
         // Items List Section
         items(receipt.items) { item ->
             ReceiptDetailItemRow(item)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)) // Add divider after each item
         }
 
-        // Divider
+        // Divider (Keep the main section divider)
         item { HorizontalDivider() }
 
         // Summary Section
