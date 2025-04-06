@@ -103,11 +103,10 @@ class ReceiptRepositoryImpl @Inject constructor(
 
 
     // Updated: Save scan data locally and enqueue sync worker
-    override suspend fun submitReceiptData(url: String, htmlContent: String): Result<Unit> {
+    override suspend fun submitReceiptData(url: String, htmlContent: String): Result<Unit> { // Remove userId parameter
         return try {
-            val currentUser = supabaseClient.auth.currentUserOrNull()
-                ?: return Result.failure(IllegalStateException("User not logged in"))
-            val userId = currentUser.id
+            // Get current user ID (can be null if logged out)
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
 
             val pendingScan = PendingScanEntity(
                 url = url,
@@ -126,11 +125,10 @@ class ReceiptRepositoryImpl @Inject constructor(
     }
 
     // Updated: Save scan URL locally and enqueue sync worker
-    override suspend fun saveReceiptUrl(url: String): Result<Unit> {
+    override suspend fun saveReceiptUrl(url: String): Result<Unit> { // Remove userId parameter
          return try {
-            val currentUser = supabaseClient.auth.currentUserOrNull()
-                 ?: return Result.failure(IllegalStateException("User not logged in"))
-            val userId = currentUser.id
+            // Get current user ID (can be null if logged out)
+            val userId = supabaseClient.auth.currentUserOrNull()?.id
 
             val pendingScan = PendingScanEntity(
                 url = url,
@@ -400,6 +398,26 @@ class ReceiptRepositoryImpl @Inject constructor(
                 emit(0) // Emit 0 in case of error
             }
     }
+
+    // Function to observe the list of pending scans
+    override fun getPendingScansFlow(): Flow<List<PendingScanEntity>> {
+        return pendingScanDao.getAllPendingScansFlow()
+            .catch { e ->
+                Log.e(TAG, "Error getting pending scans flow", e)
+                emit(emptyList()) // Emit empty list on error
+            } // Correct brace placement
+    }
+
+    // Function to get a snapshot list of pending scans
+    override suspend fun getPendingScans(): List<PendingScanEntity> {
+        return try {
+            pendingScanDao.getPendingScans()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting pending scans snapshot", e)
+            emptyList() // Return empty list on error
+        }
+    }
+
 
     // Enqueues a one-time work request for immediate sync attempt
     private fun enqueueOneTimeSyncWork() {

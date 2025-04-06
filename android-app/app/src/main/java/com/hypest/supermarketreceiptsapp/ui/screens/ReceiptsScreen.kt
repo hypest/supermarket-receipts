@@ -210,7 +210,8 @@ fun ReceiptsScreen(
                     }
                 }
 
-                // Processing Overlay
+                // Processing Overlay (Removed as state is no longer used)
+                /*
                 if (currentState is ReceiptsScreenState.Processing) {
                     Box(
                         modifier = Modifier
@@ -225,6 +226,7 @@ fun ReceiptsScreen(
                         }
                     }
                 }
+                */
 
                 // Error Overlay
                 if (currentState is ReceiptsScreenState.Error) {

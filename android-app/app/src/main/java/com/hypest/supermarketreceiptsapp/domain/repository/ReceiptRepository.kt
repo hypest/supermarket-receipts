@@ -1,14 +1,15 @@
 package com.hypest.supermarketreceiptsapp.domain.repository
 
+import com.hypest.supermarketreceiptsapp.data.local.PendingScanEntity // Import PendingScanEntity
 import com.hypest.supermarketreceiptsapp.domain.model.Receipt
 import kotlinx.coroutines.flow.Flow
 
 interface ReceiptRepository {
     // Function to submit URL and potentially extracted HTML
-    suspend fun submitReceiptData(url: String, htmlContent: String): Result<Unit> // Removed userId
+    suspend fun submitReceiptData(url: String, htmlContent: String): Result<Unit> // Removed userId again
 
-    // Function to just save the URL (for providers where client-side extraction isn't needed/possible)
-    suspend fun saveReceiptUrl(url: String): Result<Unit> // Removed userId
+    // Function to just save the URL
+    suspend fun saveReceiptUrl(url: String): Result<Unit> // Removed userId again
 
     // Function to fetch all processed receipts for the current user (Flow handles suspension)
     fun getReceipts(): Flow<Result<List<Receipt>>>
@@ -22,4 +23,10 @@ interface ReceiptRepository {
 
     // Function to observe the count of pending scans
     fun getPendingScanCountFlow(): Flow<Int>
+
+    // Function to observe the list of pending scans
+    fun getPendingScansFlow(): Flow<List<PendingScanEntity>>
+
+    // Function to get a snapshot list of pending scans
+    suspend fun getPendingScans(): List<PendingScanEntity>
 }

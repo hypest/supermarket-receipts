@@ -4,9 +4,9 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [ReceiptEntity::class, ReceiptItemEntity::class, PendingScanEntity::class], // Add PendingScanEntity
-    version = 2, // Increment version
-    exportSchema = false // Schema export is recommended for production apps, but false for simplicity here
+    entities = [ReceiptEntity::class, ReceiptItemEntity::class, PendingScanEntity::class],
+    version = 3, // Increment version for schema change (PK)
+    exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun receiptDao(): ReceiptDao

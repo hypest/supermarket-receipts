@@ -1,12 +1,22 @@
 package com.hypest.supermarketreceiptsapp.viewmodel
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hypest.supermarketreceiptsapp.data.local.PendingScanEntity // Import PendingScanEntity
 import com.hypest.supermarketreceiptsapp.domain.model.Receipt
 import com.hypest.supermarketreceiptsapp.domain.repository.AuthRepository
 import com.hypest.supermarketreceiptsapp.domain.repository.ReceiptRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import io.github.jan.supabase.SupabaseClient // Import SupabaseClient
+import io.github.jan.supabase.auth.auth // Import auth extension
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
@@ -14,19 +24,18 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlinx.coroutines.flow.map // Ensure map is imported
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.awaitClose // Import awaitClose
+import kotlinx.coroutines.delay // Import delay
 
 // Unified state representation for the Receipts Screen
 sealed class ReceiptsScreenState {
     data object ReadyToScan : ReceiptsScreenState()
     data object Scanning : ReceiptsScreenState()
     data class ExtractingHtml(val url: String, val showOverlay: Boolean = true) : ReceiptsScreenState()
-    data class Processing(val url: String, val html: String?) : ReceiptsScreenState()
-    data object Success : ReceiptsScreenState()
+    // data class Processing(val url: String, val html: String?) : ReceiptsScreenState() // Removed state
+    data object Success : ReceiptsScreenState() // Indicates successful queuing
     data class Error(val message: String) : ReceiptsScreenState()
 }
-
-// Event to represent scanned data
-private data class ScanEvent(val url: String, val html: String? = null)
 
 data class ReceiptsListState(
     val isLoading: Boolean = false,
@@ -37,8 +46,12 @@ data class ReceiptsListState(
 @HiltViewModel
 class ReceiptsViewModel @Inject constructor(
     private val receiptRepository: ReceiptRepository,
-    private val authRepository: AuthRepository // Keep AuthRepository if needed for user ID etc.
+    private val authRepository: AuthRepository,
+    private val supabaseClient: SupabaseClient, // Inject SupabaseClient
+    @ApplicationContext private val context: Context // Inject context for ConnectivityManager
 ) : ViewModel() {
+
+    private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     companion object {
         private const val TAG = "ReceiptsViewModel" // Add TAG definition
@@ -56,6 +69,43 @@ class ReceiptsViewModel @Inject constructor(
             initialValue = 0 // Start with 0 pending scans
         )
 
+    // Flow for the list of pending scans
+    private val pendingScansFlow: Flow<List<PendingScanEntity>> = receiptRepository.getPendingScansFlow()
+
+    // Flow for network connectivity status
+    private val networkStatusFlow: Flow<Boolean> = callbackFlow {
+        val networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                // Check internet capability specifically
+                val capabilities = connectivityManager.getNetworkCapabilities(network)
+                val hasInternet = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+                if (hasInternet) {
+                    Log.d(TAG, "Network available")
+                    trySend(true)
+                }
+            }
+            override fun onLost(network: Network) {
+                 Log.d(TAG, "Network lost")
+                trySend(false)
+            }
+            override fun onUnavailable() {
+                 Log.d(TAG, "Network unavailable")
+                trySend(false)
+            }
+        }
+
+        // Check initial state
+        val initialState = isNetworkAvailable()
+        trySend(initialState)
+
+        val networkRequest = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
+
+        awaitClose { connectivityManager.unregisterNetworkCallback(networkCallback) }
+    }.distinctUntilChanged() // Only emit when status changes
+
     // Convert the Flow<Result<List<Receipt>>> directly into StateFlow<ReceiptsUiState>
     val receiptsListState: StateFlow<ReceiptsListState> = receiptRepository.getReceipts()
         .map { result -> // Map Result<List<Receipt>> to ReceiptsListState
@@ -64,9 +114,6 @@ class ReceiptsViewModel @Inject constructor(
                     ReceiptsListState(isLoading = false, receipts = receipts, error = null)
                 },
                 onFailure = { throwable ->
-                    // Keep existing receipts if available during error? Or clear them?
-                    // Let's keep them for now, but show error.
-                    // Could also use stateIn's initialValue to handle initial loading state better.
                     ReceiptsListState(isLoading = false, error = throwable.message ?: "Failed to load receipts")
                 }
             )
@@ -80,38 +127,95 @@ class ReceiptsViewModel @Inject constructor(
         }
         .stateIn( // Convert to StateFlow
             scope = viewModelScope,
-            started = WhileSubscribed(5000), // Keep upstream flow active for 5s after last collector disappears
+            started = WhileSubscribed(5000),
             initialValue = ReceiptsListState(isLoading = true) // Start with loading state
         )
 
-    // Flow to handle scan events, ensuring only the latest is processed if auth is delayed
-    private val _scanEventFlow = MutableSharedFlow<ScanEvent>(
-        replay = 1, // Keep the last event for late subscribers (like auth state change)
-        onBufferOverflow = BufferOverflow.DROP_OLDEST // Drop older events if buffer overflows
-    )
-    private val scanEventFlow = _scanEventFlow.asSharedFlow()
+    // New function to check for pending extractions (moved before init)
+    private suspend fun checkForPendingHtmlExtractions() {
+        // Only proceed if the UI is currently idle/ready
+        if (_screenState.value != ReceiptsScreenState.ReadyToScan) {
+            Log.d(TAG, "checkForPendingHtmlExtractions: UI not ready (${_screenState.value}), skipping check.")
+            return
+        }
+
+        if (isNetworkAvailable()) {
+            Log.d(TAG, "checkForPendingHtmlExtractions: Network available, checking DB...")
+            val pendingScans = receiptRepository.getPendingScans() // Get snapshot
+            val scanToExtract = pendingScans.firstOrNull { scan ->
+                shouldExtractHtmlForUrl(scan.url) && scan.htmlContent == null
+            }
+            if (scanToExtract != null) {
+                Log.i(TAG, "Found next pending scan needing HTML extraction: ${scanToExtract.url}. Triggering.")
+                _screenState.value = ReceiptsScreenState.ExtractingHtml(scanToExtract.url)
+            } else {
+                 Log.d(TAG, "No more pending scans needing HTML extraction found.")
+            }
+        } else {
+             Log.d(TAG, "Network not available, cannot check for pending HTML extractions.")
+        }
+    }
+
+    // Observe pending scans and network status to trigger HTML extraction
+    init {
+        viewModelScope.launch {
+            combine(pendingScansFlow, networkStatusFlow) { scans, isOnline ->
+                Pair(scans, isOnline)
+            }
+            // No filter here, check conditions inside collect
+            .collect { (pendingScans, isOnline) ->
+                // Check conditions *inside* collect
+                if (isOnline && _screenState.value == ReceiptsScreenState.ReadyToScan) {
+                    val scanToExtract = pendingScans.firstOrNull { scan ->
+                        shouldExtractHtmlForUrl(scan.url) && scan.htmlContent == null
+                    }
+                    if (scanToExtract != null) {
+                        Log.i(TAG, "Conditions met (Online, Ready, Pending): Found scan needing HTML extraction: ${scanToExtract.url}. Triggering.")
+                        _screenState.value = ReceiptsScreenState.ExtractingHtml(scanToExtract.url)
+                    } else {
+                        Log.d(TAG, "Conditions met (Online, Ready), but no pending scans need HTML extraction.")
+                    }
+                } else {
+                     Log.d(TAG, "Conditions not met for auto-extraction check (isOnline=$isOnline, state=${_screenState.value})")
+                }
+            }
+        }
+    }
+    // Corrected brace placement
+
 
     // Called when the user clicks the "Scan QR Code" button
     fun startScanning() {
-        // Directly transition to Scanning state. Permission handled by the scanner library.
         _screenState.value = ReceiptsScreenState.Scanning
     }
 
     // Called by the QrCodeScanner component when a code is successfully scanned
     fun onQrCodeScanned(url: String) {
-        Log.d("MainViewModel", "QR Code scanned: $url")
-        // Decide whether to extract HTML based on URL
-        if (shouldExtractHtmlForUrl(url)) {
-            Log.d("MainViewModel", "Transitioning to ExtractingHtml state for URL: $url")
-            _screenState.value = ReceiptsScreenState.ExtractingHtml(url)
-            // Actual processing triggered by onHtmlExtracted
-        } else {
-            Log.d("MainViewModel", "Skipping HTML extraction, transitioning directly to Processing state for URL: $url")
-            // For providers like Entersoft, process immediately without HTML
-            _screenState.value = ReceiptsScreenState.Processing(url, null) // Pass null for HTML
-            // Emit event to the flow
-            viewModelScope.launch {
-                _scanEventFlow.emit(ScanEvent(url = url, html = null))
+        Log.d(TAG, "QR Code scanned: $url")
+
+        viewModelScope.launch {
+            val needsExtraction = shouldExtractHtmlForUrl(url)
+            val isOnline = isNetworkAvailable()
+
+            if (needsExtraction && isOnline) {
+                // Online and needs HTML: Start extraction process WITHOUT saving locally yet.
+                Log.d(TAG, "Online and HTML needed. Transitioning to ExtractingHtml state for URL: $url")
+                _screenState.value = ReceiptsScreenState.ExtractingHtml(url)
+            } else {
+                // Either offline OR HTML not needed: Save locally immediately (URL only).
+                Log.d(TAG, "Offline or HTML not needed. Saving scan locally for URL: $url")
+                val saveResult = receiptRepository.saveReceiptUrl(url) // Save URL only
+
+                if (saveResult.isFailure) {
+                    Log.e(TAG, "Failed to save pending scan locally for URL: $url", saveResult.exceptionOrNull())
+                    _screenState.value = ReceiptsScreenState.Error("Failed to queue scan.")
+                    return@launch
+                }
+
+                Log.d(TAG, "Scan queued locally for URL: $url")
+                _screenState.value = ReceiptsScreenState.Success // Indicate queuing success
+                 delay(1500)
+                 resetToReadyState()
             }
         }
     }
@@ -119,115 +223,27 @@ class ReceiptsViewModel @Inject constructor(
     // Called by HtmlExtractorWebView when HTML is ready (or if extraction failed)
     fun onHtmlExtracted(url: String, html: String?) {
         if (html == null) {
-            Log.e("MainViewModel", "HTML extraction failed for URL: $url")
+            Log.e(TAG, "HTML extraction failed for URL: $url")
             _screenState.value = ReceiptsScreenState.Error("Failed to extract HTML content from the receipt page.")
             return
         }
-        Log.d("MainViewModel", "HTML extracted (length: ${html.length}), transitioning to Processing state for URL: $url")
-        _screenState.value = ReceiptsScreenState.Processing(url, html) // Show processing state
-        // Emit event to the flow
+        Log.d(TAG, "HTML extracted (length: ${html.length}), submitting data for URL: $url")
+
         viewModelScope.launch {
-            _scanEventFlow.emit(ScanEvent(url = url, html = html))
-        }
-    }
-
-    // Observe auth status and combine it with the latest scan event
-    init {
-        viewModelScope.launch {
-            // Combine the latest scan event with the auth status.
-            // `combine` ensures we only proceed when both flows have emitted at least once
-            // and triggers whenever either flow emits a new value.
-            scanEventFlow.combine(authRepository.sessionStatus) { event, status ->
-                Pair(event, status)
-            }
-                // We only care about processing when the user is authenticated.
-                .filter { (_, status) -> status is SessionStatus.Authenticated }
-                // Avoid processing the same event multiple times if auth status flaps quickly
-                .distinctUntilChangedBy { (event, _) -> event }
-                .collectLatest { (event, status) ->
-                    // Double-check status just in case, though filter should handle it.
-                    if (status is SessionStatus.Authenticated) {
-                        Log.d(TAG, "User authenticated, processing event for URL: ${event.url}")
-                        // Check if the current state is Processing, otherwise the event might be stale
-                        // (e.g., user scanned, logged out, logged back in - we shouldn't process the old scan)
-                        // Or maybe we *should* process it? Let's assume yes for now, the replay=1 handles this.
-                        if (_screenState.value is ReceiptsScreenState.Processing &&
-                            (_screenState.value as ReceiptsScreenState.Processing).url == event.url) {
-
-                            // Call the suspend function and wait for its result
-                            val result = processScannedData(event.url, event.html)
-
-                            // Update state based on the result *within* the collectLatest block
-                            result.onSuccess {
-                                Log.d(TAG, "Receipt data processed successfully (within collectLatest) for URL: ${event.url}")
-                                // Only transition from Processing to Success/Error
-                                if (_screenState.value is ReceiptsScreenState.Processing && (_screenState.value as ReceiptsScreenState.Processing).url == event.url) {
-                                    _screenState.value = ReceiptsScreenState.Success
-                                }
-                            }.onFailure { error ->
-                                Log.e(TAG, "Error processing receipt data (within collectLatest) for URL: ${event.url}", error)
-                                // Only transition from Processing to Success/Error
-                                if (_screenState.value is ReceiptsScreenState.Processing && (_screenState.value as ReceiptsScreenState.Processing).url == event.url) {
-                                    _screenState.value = ReceiptsScreenState.Error(error.message ?: "Failed to process receipt data.")
-                                }
-                            }
-                            // Consume the event? Replay=1 handles overwriting.
-                            // If double processing is an issue, more complex state management or event clearing needed.
-                            // but SharedFlow with replay=1 and collectLatest is often sufficient.
-                        } else {
-                             Log.w(TAG, "Auth confirmed, but current state (${_screenState.value}) doesn't match pending event URL (${event.url}). Ignoring stale event.")
-                        }
-                    }
-                }
-        }
-
-        // Also handle the case where the user logs out *while* processing is pending
-        viewModelScope.launch {
-            authRepository.sessionStatus
-                .filter { it is SessionStatus.NotAuthenticated }
-                .collect {
-                    // If we were in a processing state, the user logged out before it could be saved.
-                    if (_screenState.value is ReceiptsScreenState.Processing) {
-                        Log.w(TAG, "User logged out while receipt processing was pending.")
-                        _screenState.value = ReceiptsScreenState.Error("User logged out before receipt could be saved.")
-                        // Clear any pending event in the flow? Replay cache makes this tricky without
-                        // emitting a "clear" event or using a different mechanism.
-                        // For now, the combine logic will prevent processing if auth fails.
-                    }
-                }
-        }
-    }
-
-
-    // Central suspend function to handle submitting data to the repository
-    // Returns Result<Unit> to indicate success or failure
-    private suspend fun processScannedData(url: String, html: String?): Result<Unit> {
-        // We know user is authenticated here because this is only called from the observer logic
-        Log.d(TAG, "Processing receipt data: URL=$url, HasHTML=${html != null}")
-
-        // Choose repository function based on whether HTML was extracted
-        // Assuming repository functions return Result directly or are suspend fun returning Unit/throwing Exception
-        // Let's wrap in runCatching for safety if they aren't returning Result already.
-        // NOTE: If repository functions are already suspend fun returning Result, runCatching is redundant.
-        // Adjust based on actual ReceiptRepository implementation.
-        return runCatching { // Use runCatching to ensure a Result is always returned
-            if (html != null) {
-                // Assuming submitReceiptData is suspend or returns Result
-                receiptRepository.submitReceiptData(url, html).getOrThrow() // Use getOrThrow if it returns Result
+            val submitResult = receiptRepository.submitReceiptData(url, html)
+            if (submitResult.isSuccess) {
+                _screenState.value = ReceiptsScreenState.Success // Indicate success (local save)
+                delay(1500)
+                resetToReadyState()
             } else {
-                // Assuming saveReceiptUrl is suspend or returns Result
-                receiptRepository.saveReceiptUrl(url).getOrThrow() // Use getOrThrow if it returns Result
+                 Log.e(TAG, "Failed to save pending scan with HTML locally for URL: $url", submitResult.exceptionOrNull())
+                _screenState.value = ReceiptsScreenState.Error("Failed to queue scan with HTML.")
             }
-            // If repository functions are suspend fun returning Unit, the above lines simplify:
-            // if (html != null) receiptRepository.submitReceiptData(url, html)
-            // else receiptRepository.saveReceiptUrl(url)
         }
-        // runCatching automatically wraps success (Unit) or failure (Exception) into a Result<Unit>
     }
 
     // Called by the QrCodeScanner component when the user cancels the scan
     fun onScanCancelled() {
-        // Go back to ready state only if we were actually scanning
         if (_screenState.value == ReceiptsScreenState.Scanning) {
              _screenState.value = ReceiptsScreenState.ReadyToScan
         }
@@ -235,45 +251,44 @@ class ReceiptsViewModel @Inject constructor(
 
      // Called by the QrCodeScanner component if it encounters an internal error
      fun onScanError(exception: Exception) {
-         Log.e("MainViewModel", "Scanner internal error", exception)
-         // Go back to ready state or show specific error
+         Log.e(TAG, "Scanner internal error", exception)
          _screenState.value = ReceiptsScreenState.Error("Scanner error: ${exception.message ?: "Unknown scanner issue"}")
-         // Consider transitioning back to ReadyToScan after a delay or let user click "Try Again"
      }
 
     // Called by HtmlExtractorWebView if it encounters an error
     fun onHtmlExtractionError(url: String, error: String) {
-        Log.e("MainViewModel", "HTML extraction error for URL $url: $error")
+        Log.e(TAG, "HTML extraction error for URL $url: $error")
         _screenState.value = ReceiptsScreenState.Error("Failed to extract HTML: $error")
-         // Consider going back to ReadyToScan automatically or require user action
      }
 
      // Helper function to decide if WebView extraction is needed using Regex
      private fun shouldExtractHtmlForUrl(url: String): Boolean {
          return try {
-             val hostname = java.net.URL(url).host.lowercase() // Use lowercase for case-insensitive match
-
-             // Define regex patterns for providers requiring client-side extraction
-             // Currently targets any subdomain ending in .epsilonnet.gr
+             val hostname = java.net.URL(url).host.lowercase()
              val clientSideExtractionPatterns = listOf(
                  Regex(""".*\.epsilonnet\.gr$""")
-                 // Add Regex(""".*\.another-provider\.com/path/.*""") etc. if needed later
              )
-
              val needsExtraction = clientSideExtractionPatterns.any { pattern -> pattern.matches(hostname) }
-
              if (needsExtraction) {
-                 Log.d("MainViewModel", "URL $url matches client-side extraction pattern.")
+                 Log.d(TAG, "URL $url matches client-side extraction pattern.")
              } else {
-                 Log.d("MainViewModel", "URL $url does NOT match client-side extraction pattern (will use backend fetching).")
+                 Log.d(TAG, "URL $url does NOT match client-side extraction pattern.")
              }
              needsExtraction
-
          } catch (e: Exception) {
-             Log.w("MainViewModel", "Could not parse URL hostname or match regex for: $url", e)
-             false // Default to not extracting if URL is invalid or regex fails
+             Log.w(TAG, "Could not parse URL hostname or match regex for: $url", e)
+             false
          }
      }
+
+     // Helper function to check network availability
+     private fun isNetworkAvailable(): Boolean {
+         val activeNetwork = connectivityManager.activeNetwork ?: return false
+         val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork) ?: return false
+         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+     }
+
 
     // Called by HtmlExtractorWebView if it detects a persistent challenge page
     fun onChallengeInteractionRequired() {
@@ -284,9 +299,16 @@ class ReceiptsViewModel @Inject constructor(
         }
     }
 
-    // Called when user clicks "Scan Another" or "Try Again" from Success/Error state
+    // Called when user clicks "Scan Another" or "Try Again" from Success/Error state,
+    // or automatically after a successful queue/extraction.
     fun resetToReadyState() {
-        // Simply go back to the ready state
         _screenState.value = ReceiptsScreenState.ReadyToScan
+        // After resetting, immediately check if there's another pending scan to process
+        viewModelScope.launch {
+            checkForPendingHtmlExtractions() // Call the function defined above
+        }
     }
+
+    // Removed duplicate definition from here
 }
+// Corrected brace placement
