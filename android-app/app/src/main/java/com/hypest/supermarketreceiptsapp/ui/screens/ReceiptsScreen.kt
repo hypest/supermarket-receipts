@@ -455,14 +455,14 @@ private fun formatDisplayDateTime(isoString: String?): String {
 }
 
 
-// Keep formatCurrency as is
+// Updated formatCurrency to use Greek locale
 private fun formatCurrency(amount: Double?): String {
     if (amount == null) return "N/A"
-    val format = NumberFormat.getCurrencyInstance(Locale("en", "US")) // Use US locale for $ sign
+    val format = NumberFormat.getCurrencyInstance(Locale("el", "GR")) // Use Greek locale for Euro (€)
     return try {
         format.format(amount)
     } catch (e: Exception) {
         Log.w("ReceiptsScreen", "Failed to format currency: $amount", e)
-        "$${String.format("%.2f", amount)}" // Basic fallback with $ sign
+        amount.toString() // Fallback to plain number string
     }
 }

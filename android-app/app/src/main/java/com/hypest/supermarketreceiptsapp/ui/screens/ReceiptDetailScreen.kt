@@ -335,11 +335,11 @@ private fun formatQuantityAndPrice(quantity: Double?, price: Double?): String {
 // Re-use currency formatting function (could be moved to a common util file)
 private fun formatCurrency(amount: Double?): String {
     if (amount == null) return "N/A"
-    val format = NumberFormat.getCurrencyInstance(Locale("en", "US")) // Use US locale for $ sign
+    val format = NumberFormat.getCurrencyInstance(Locale("el", "GR")) // Use Greek locale for Euro (€)
     return try {
         format.format(amount)
     } catch (e: Exception) {
         Log.w("ReceiptDetailScreen", "Failed to format currency: $amount", e)
-        "$${String.format("%.2f", amount)}" // Basic fallback with $ sign
+        amount.toString() // Fallback to plain number string
     }
 }
