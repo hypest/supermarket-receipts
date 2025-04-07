@@ -155,15 +155,20 @@ const entersoftParser: ReceiptParser = {
     $('#no-more-tables table tbody tr').each((index: number, element: cheerio.Element) => {
       if ($(element).hasClass('comments')) return;
 
-      const columns = $(element).find('td');
-      if (columns.length < 9) {
-        console.warn(`${logPrefix}Skipping row ${index + 1} due to insufficient columns (${columns.length})`);
+      // Find columns by data-title attribute
+      const nameElement = $(element).find('td[data-title="Περιγραφή"]');
+      const quantityElement = $(element).find('td[data-title="Ποσότητα"]');
+      const priceElement = $(element).find('td[data-title="Συνολική Αξία"]');
+
+      // Check if all required elements were found
+      if (!nameElement.length || !quantityElement.length || !priceElement.length) {
+        console.warn(`${logPrefix}Skipping row ${index + 1}: Could not find all required cells (name, quantity, price) using data-title.`);
         return;
       }
 
-      const name = $(columns[1]).text().trim();
-      const quantityText = $(columns[3]).text().trim();
-      const priceText = $(columns[8]).text().trim();
+      const name = nameElement.text().trim();
+      const quantityText = quantityElement.text().trim();
+      const priceText = priceElement.text().trim();
 
       const quantity = parseFloat(quantityText.replace('.', '').replace(',', '.')) || 0;
       const price = parseFloat(priceText.replace('.', '').replace(',', '.')) || 0;
