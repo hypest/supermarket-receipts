@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:parser:epsilon": "ts-node -O '{\"module\": \"CommonJS\"}' test-parser.ts",
+    "test:parser:entersoft": "ts-node -O '{\"module\": \"CommonJS\"}' test-entersoft-parser.ts",
+    "test:parsers": "npm run test:parser:epsilon && npm run test:parser:entersoft"
   },
   "dependencies": {
     "@sparticuz/chromium": "^133.0.0",
@@ -35,6 +38,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   },
   "optionalDependencies": {
