@@ -20,7 +20,8 @@ data class ReceiptItemEntity(
     val receiptId: String, // Foreign key linking to ReceiptEntity
     val name: String,
     val quantity: Double, // Make non-nullable
-    val price: Double // Make non-nullable
+    val price: Double, // Make non-nullable - This is the total price
+    val unitPrice: Double? // Add nullable unit price
     // Note: We might not need the remote 'id' from Supabase for local items,
     // unless we need to sync individual item changes back.
     // For simple caching, an auto-generated local ID is sufficient.

@@ -183,12 +183,21 @@ fun ReceiptDetailItemRow(item: ReceiptItem) {
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(item.name, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                // Format quantity and unit price if possible
-                text = formatQuantityAndPrice(item.quantity, item.price),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // Display quantity and unit price if available
+            val quantityText = item.quantity?.toString() ?: "" // Handle potential null quantity
+            val unitPriceText = item.unitPrice?.let { formatCurrency(it) } // Format unit price if not null
+            val detailText = if (unitPriceText != null) {
+                "$quantityText x $unitPriceText"
+            } else {
+                quantityText // Show only quantity if unit price is null
+            }
+            if (detailText.isNotBlank()) {
+                Text(
+                    text = detailText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
         Spacer(modifier = Modifier.width(16.dp))
         Text(

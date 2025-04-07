@@ -72,10 +72,11 @@ class ReceiptRepositoryImpl @Inject constructor(
 
     private fun ReceiptItemEntity.toDomainModel(): ReceiptItem {
         return ReceiptItem(
-            id = null,
+            id = null, // Local entity doesn't store Supabase item ID
             name = this.name,
             quantity = this.quantity,
-            price = this.price
+            price = this.price, // Total price
+            unitPrice = this.unitPrice // Map unit price
         )
     }
 
@@ -96,7 +97,8 @@ class ReceiptRepositoryImpl @Inject constructor(
             receiptId = receiptId,
             name = this.name,
             quantity = this.quantity,
-            price = this.price
+            price = this.price, // Total price
+            unitPrice = this.unitPrice // Map unit price
         )
     }
     // --- End Mappers ---
@@ -202,7 +204,7 @@ class ReceiptRepositoryImpl @Inject constructor(
             val networkReceipt = supabaseClient.postgrest[RECEIPTS_TABLE].select(
                 columns = Columns.list(
                     "id", "receipt_date", "total_amount", "store_name", "uid", "created_at",
-                    "receipt_items(id, name, quantity, price)"
+                    "receipt_items(id, name, quantity, price, unit_price)" // Add unit_price here
                 )
             ) {
                 filter {
@@ -356,7 +358,7 @@ class ReceiptRepositoryImpl @Inject constructor(
             val networkReceipts = supabaseClient.postgrest[RECEIPTS_TABLE].select(
                 columns = Columns.list(
                     "id", "receipt_date", "total_amount", "store_name", "uid", "created_at",
-                    "receipt_items(id, name, quantity, price)"
+                    "receipt_items(id, name, quantity, price, unit_price)" // Add unit_price here
                 )
             ) {
                 filter { eq("user_id", userId) }

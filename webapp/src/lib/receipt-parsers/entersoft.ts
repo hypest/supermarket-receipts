@@ -159,25 +159,29 @@ const entersoftParser: ReceiptParser = {
       const nameElement = $(element).find('td[data-title="Περιγραφή"]');
       const quantityElement = $(element).find('td[data-title="Ποσότητα"]');
       const priceElement = $(element).find('td[data-title="Συνολική Αξία"]');
+      const unitPriceElement = $(element).find('td[data-title="Τιμή μονάδας"]'); // Find unit price element
 
-      // Check if all required elements were found
+      // Check if all required elements were found (unit price is optional for now)
       if (!nameElement.length || !quantityElement.length || !priceElement.length) {
-        console.warn(`${logPrefix}Skipping row ${index + 1}: Could not find all required cells (name, quantity, price) using data-title.`);
+        console.warn(`${logPrefix}Skipping row ${index + 1}: Could not find all required cells (name, quantity, total price) using data-title.`);
         return;
       }
 
       const name = nameElement.text().trim();
       const quantityText = quantityElement.text().trim();
       const priceText = priceElement.text().trim();
+      const unitPriceText = unitPriceElement.length ? unitPriceElement.text().trim() : ''; // Get unit price text if element exists
 
       const quantity = parseFloat(quantityText.replace('.', '').replace(',', '.')) || 0;
-      const price = parseFloat(priceText.replace('.', '').replace(',', '.')) || 0;
+      const price = parseFloat(priceText.replace('.', '').replace(',', '.')) || 0; // Total price
+      const unit_price = unitPriceText ? parseFloat(unitPriceText.replace('.', '').replace(',', '.')) : null; // Unit price (null if not found/parsed)
+
 
       if (name && quantity > 0) {
-        items.push({ name, quantity, price });
-      } else if (name || quantityText || priceText) {
+        items.push({ name, quantity, price, unit_price }); // Add unit_price here
+      } else if (name || quantityText || priceText || unitPriceText) {
          // Only warn if some data was present but couldn't be fully parsed
-        console.warn(`${logPrefix}Skipping row ${index + 1}: Could not parse data reliably (Name: '${name}', Qty Text: '${quantityText}', Price Text: '${priceText}')`);
+        console.warn(`${logPrefix}Skipping row ${index + 1}: Could not parse data reliably (Name: '${name}', Qty Text: '${quantityText}', Price Text: '${priceText}', Unit Price Text: '${unitPriceText}')`);
       }
     });
     console.log(`${logPrefix}Parsed ${items.length} items.`);

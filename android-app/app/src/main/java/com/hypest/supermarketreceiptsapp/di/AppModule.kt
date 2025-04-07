@@ -73,7 +73,8 @@ object AppModule {
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
         )
-        .fallbackToDestructiveMigration() // Add fallback migration
+        // .fallbackToDestructiveMigration() // Replace fallback with specific migration
+        .addMigrations(AppDatabase.MIGRATION_3_4) // Add our migration
         .build()
     }
 

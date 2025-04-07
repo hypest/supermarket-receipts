@@ -168,7 +168,8 @@ export async function POST(req: NextRequest) {
           receipt_id: receiptId,
           name: item.name,
           quantity: item.quantity,
-          price: item.price,
+          price: item.price, // Total price
+          unit_price: item.unit_price, // Add unit price here
         }));
 
         console.log(`Job ${jobId!}: Inserting ${itemsToInsert.length} items...`);
