@@ -260,10 +260,12 @@ export default function ReceiptsPage() {
                       <li key={item.id} className="flex justify-between items-start p-2 bg-gray-50 rounded"> {/* Changed items-center to items-start */}
                         <div className="flex-1 mr-2">
                           <span className="block text-sm text-gray-800">{item.name}</span> {/* Use block for stacking */}
-                          {/* Display quantity and unit price if available */}
-                          {(item.quantity > 1 || item.unit_price != null) && (
-                            <span className="block text-xs text-gray-500 mt-0.5"> {/* Use block and margin */}
-                              {item.quantity > 0 ? `${item.quantity} x ` : ''}
+                          {/* Show quantity/unit price details if quantity is not 1 OR unit price exists */}
+                          {(item.quantity !== 1 || item.unit_price != null) && (
+                            <span className="block text-xs text-gray-500 mt-0.5">
+                              {/* Show quantity only if it's not 1 */}
+                              {item.quantity !== 1 ? `${item.quantity} x ` : ''}
+                              {/* Show unit price if it exists */}
                               {item.unit_price != null ? formatCurrency(item.unit_price) : ''}
                             </span>
                           )}
