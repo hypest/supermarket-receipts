@@ -333,15 +333,6 @@ private fun formatDetailDateTime(isoString: String?): String {
     }
 }
 
-// Format quantity and unit price for item row
-private fun formatQuantityAndPrice(quantity: Double?, price: Double?): String {
-    if (quantity == null || price == null || quantity == 0.0) return "" // Return empty if data missing
-    val unitPrice = price / quantity
-    // Basic formatting, could be improved (e.g., handling whole numbers for quantity)
-    return "${quantity} x ${formatCurrency(unitPrice)}"
-}
-
-
 // Re-use currency formatting function (could be moved to a common util file)
 private fun formatCurrency(amount: Double?): String {
     if (amount == null) return "N/A"

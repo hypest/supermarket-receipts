@@ -9,7 +9,8 @@ interface ReceiptItem {
   id: string;
   name: string;
   quantity: number;
-  price: number;
+  price: number; // Total price
+  unit_price?: number | null; // Add optional unit price
 }
 
 interface Receipt {
@@ -256,12 +257,18 @@ export default function ReceiptsPage() {
                 {selectedReceipt.receipt_items.length > 0 ? (
                   <ul className="space-y-2 max-h-[50vh] overflow-y-auto pr-2">
                     {selectedReceipt.receipt_items.map((item) => (
-                      <li key={item.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <li key={item.id} className="flex justify-between items-start p-2 bg-gray-50 rounded"> {/* Changed items-center to items-start */}
                         <div className="flex-1 mr-2">
-                          <span className="text-sm text-gray-800">{item.name}</span>
-                          {item.quantity > 1 && <span className="text-xs text-gray-500 ml-2"> (Qty: {item.quantity})</span>}
+                          <span className="block text-sm text-gray-800">{item.name}</span> {/* Use block for stacking */}
+                          {/* Display quantity and unit price if available */}
+                          {(item.quantity > 1 || item.unit_price != null) && (
+                            <span className="block text-xs text-gray-500 mt-0.5"> {/* Use block and margin */}
+                              {item.quantity > 0 ? `${item.quantity} x ` : ''}
+                              {item.unit_price != null ? formatCurrency(item.unit_price) : ''}
+                            </span>
+                          )}
                         </div>
-                        <span className="text-sm font-medium text-gray-700">{formatCurrency(item.price)}</span>
+                        <span className="text-sm font-medium text-gray-700">{formatCurrency(item.price)}</span> {/* Total price */}
                       </li>
                     ))}
                   </ul>
