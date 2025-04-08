@@ -36,6 +36,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -242,9 +243,11 @@ class ReceiptRepositoryImpl @Inject constructor(
                         cancelAndClearListener(null) // Cancel any lingering listener
                         flowOf(Result.failure(IllegalStateException("Authenticated user has null ID.")))
                     } else {
-                        Log.i(TAG, "getReceipts: User $userId authenticated. Setting up data flow and ensuring listener.")
+                        Log.i(TAG, "getReceipts: User $userId authenticated. Setting up data flow, ensuring listener, and triggering one-time sync.")
                         // Ensure listener is running for this user
                         ensureListenerIsRunning(userId)
+                        // Trigger a one-time sync attempt now that user is logged in
+                        enqueueOneTimeSyncWork()
                         // Return the flow observing the DAO for this user
                         receiptDao.getReceiptsWithItemsForUser(userId)
                             .map { list -> Result.success(list.map { it.toDomainModel() }) }
@@ -420,9 +423,11 @@ class ReceiptRepositoryImpl @Inject constructor(
         }
     }
 
-
-    // Enqueues a one-time work request for immediate sync attempt
+    // Function to enqueue a one-time sync request (moved from MainApplication)
+    // This is now called when user is authenticated in getReceipts() flow
+    // Also called when a new scan is submitted locally
     private fun enqueueOneTimeSyncWork() {
+        Log.d(TAG, ">>> enqueueOneTimeSyncWork CALLED from Repository")
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -431,11 +436,13 @@ class ReceiptRepositoryImpl @Inject constructor(
             .setConstraints(constraints)
             .build()
 
+        // Use a unique name and REPLACE policy to ensure only one sync attempt is queued
+        // if the auth state changes rapidly or this function is called multiple times.
         WorkManager.getInstance(context).enqueueUniqueWork(
-            "SyncPendingScansOnceWork", // Use unique name for one-time work
-            ExistingWorkPolicy.KEEP, // Keep if already running/enqueued
+            "SyncPendingScansOnceOnAuthOrSubmit", // Updated unique name
+            ExistingWorkPolicy.REPLACE,
             syncWorkRequest
         )
-        Log.i(TAG, "Enqueued OneTime SyncPendingScansWork request.") // Use Log.i for clarity
+        Log.i(TAG, "One-time SyncPendingScansWork enqueued on authentication or submit.") // Updated log
     }
-} // <-- Add missing closing brace for the class
+}

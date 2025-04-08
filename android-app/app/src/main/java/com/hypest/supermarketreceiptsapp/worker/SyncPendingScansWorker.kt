@@ -7,6 +7,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.hypest.supermarketreceiptsapp.data.local.PendingScanDao
+import com.hypest.supermarketreceiptsapp.domain.repository.AuthRepository
 import com.hypest.supermarketreceiptsapp.domain.repository.ReceiptRepository // Inject Repository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -23,7 +24,9 @@ class SyncPendingScansWorker @AssistedInject constructor(
     // Inject dependencies needed for the background task
     private val pendingScanDao: PendingScanDao,
     // Inject Repository to call the actual network submission logic
-    private val receiptRepository: ReceiptRepository
+    private val receiptRepository: ReceiptRepository,
+    // Inject AuthRepository to get current user ID if needed
+    private val authRepository: AuthRepository
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
@@ -47,15 +50,22 @@ class SyncPendingScansWorker @AssistedInject constructor(
 
         for (scan in pendingScans) { // Iterate directly over the list
             try {
-                // Check if userId is present before attempting sync
-                val userId = scan.userId
-                if (userId == null) {
-                    Log.w(TAG, "Scan URL ${scan.url} has null userId. Skipping sync (likely scanned while logged out).")
-                    continue // Move to the next scan
+                // Determine the user ID to use for syncing
+                var userIdForSync: String? = scan.userId
+                if (userIdForSync == null) {
+                    Log.d(TAG, "Scan URL ${scan.url} has null userId locally. Checking current auth state...")
+                    userIdForSync = authRepository.getCurrentUserId() // Corrected: Call non-suspend function
+                    if (userIdForSync == null) {
+                        Log.w(TAG, "Scan URL ${scan.url} has null userId and user is currently not logged in. Skipping sync.")
+                        // Don't set allSucceeded = false, just skip this one for now
+                        continue // Move to the next scan
+                    } else {
+                        Log.i(TAG, "User is now logged in ($userIdForSync). Proceeding with sync for scan URL ${scan.url}.")
+                    }
                 }
 
-                // userId is confirmed non-null here
-                Log.d(TAG, "Attempting to sync scan URL: ${scan.url} for user $userId")
+                // userIdForSync is confirmed non-null here
+                Log.d(TAG, "Attempting to sync scan URL: ${scan.url} for user $userIdForSync")
 
                 // Determine if HTML extraction is required for this URL type
                 val needsExtraction = shouldExtractHtmlForUrl(scan.url)
@@ -63,7 +73,7 @@ class SyncPendingScansWorker @AssistedInject constructor(
                 if (scan.htmlContent != null) {
                     // Has HTML content, attempt sync and handle result
                     Log.d(TAG, "Scan URL ${scan.url} has HTML content, attempting sync.")
-                    receiptRepository.syncPendingScanToServer(scan.url, scan.htmlContent, userId) // Pass non-null userId
+                    receiptRepository.syncPendingScanToServer(scan.url, scan.htmlContent, userIdForSync) // Use userIdForSync
                         .fold(
                             onSuccess = {
                                 Log.d(TAG, "Successfully synced scan URL: ${scan.url} (with HTML)")
@@ -78,7 +88,7 @@ class SyncPendingScansWorker @AssistedInject constructor(
                 } else if (!needsExtraction) {
                     // No HTML content, and none needed, attempt URL sync and handle result
                     Log.d(TAG, "Scan URL ${scan.url} does not need HTML, attempting URL sync.")
-                    receiptRepository.syncPendingScanUrlToServer(scan.url, userId) // Pass non-null userId
+                    receiptRepository.syncPendingScanUrlToServer(scan.url, userIdForSync) // Use userIdForSync
                          .fold(
                             onSuccess = {
                                 Log.d(TAG, "Successfully synced scan URL: ${scan.url} (URL only)")
