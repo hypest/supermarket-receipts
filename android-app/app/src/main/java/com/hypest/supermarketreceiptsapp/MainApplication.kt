@@ -36,7 +36,7 @@ class MainApplication : Application(), Configuration.Provider { // Implement Con
             .build()
 
         val syncWorkRequest = PeriodicWorkRequestBuilder<SyncPendingScansWorker>(
-            repeatInterval = 6, // Repeat every 6 hours
+            repeatInterval = 1, // Repeat every 6 hours
             repeatIntervalTimeUnit = TimeUnit.HOURS
         )
             .setConstraints(constraints)
