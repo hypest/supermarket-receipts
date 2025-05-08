@@ -8,7 +8,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [ReceiptEntity::class, ReceiptItemEntity::class, PendingScanEntity::class],
-    version = 4, // Incremented version for adding unitPrice
+    version = 5, // Incremented version for adding vatPercentage
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -24,6 +24,13 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE receipt_items ADD COLUMN unitPrice REAL") // Use REAL for Double?
+            }
+        }
+
+        // Migration from version 4 to 5: Add vatPercentage column to receipt_items
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE receipt_items ADD COLUMN vatPercentage REAL") // Use REAL for Double?
             }
         }
     }

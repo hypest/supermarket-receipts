@@ -8,6 +8,7 @@ data class ReceiptItem(
     val name: String,
     val quantity: Double, // Using Double for numeric
     val price: Double, // Using Double for numeric(10, 2) - This is the total price
-    val unitPrice: Double? = null // Add nullable unit price
+    val unitPrice: Double? = null, // Add nullable unit price
+    val vatPercentage: Double? = null // Add nullable VAT percentage
     // created_at is not needed for display usually
 )

@@ -36,7 +36,8 @@ export async function GET(_request: Request) { // Add ESLint disable comment
         name,
         quantity,
         price,
-        unit_price
+        unit_price,
+        vat_percentage
       )
     `)
     .eq('user_id', user.id)

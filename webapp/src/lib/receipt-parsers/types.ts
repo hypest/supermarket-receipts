@@ -12,6 +12,7 @@ export interface ParsedReceiptData {
     quantity: number;
     price: number; // Total line price
     unit_price?: number | null; // Price per unit (optional)
+    vat_percentage?: number | null; // VAT percentage (optional)
   }[];
 }
 

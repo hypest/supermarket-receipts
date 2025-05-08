@@ -77,7 +77,8 @@ class ReceiptRepositoryImpl @Inject constructor(
             name = this.name,
             quantity = this.quantity,
             price = this.price, // Total price
-            unitPrice = this.unitPrice // Map unit price
+            unitPrice = this.unitPrice, // Map unit price
+            vatPercentage = this.vatPercentage // Map VAT percentage
         )
     }
 
@@ -99,7 +100,8 @@ class ReceiptRepositoryImpl @Inject constructor(
             name = this.name,
             quantity = this.quantity,
             price = this.price, // Total price
-            unitPrice = this.unitPrice // Map unit price
+            unitPrice = this.unitPrice, // Map unit price
+            vatPercentage = this.vatPercentage // Map VAT percentage
         )
     }
     // --- End Mappers ---
@@ -205,7 +207,7 @@ class ReceiptRepositoryImpl @Inject constructor(
             val networkReceipt = supabaseClient.postgrest[RECEIPTS_TABLE].select(
                 columns = Columns.list(
                     "id", "receipt_date", "total_amount", "store_name", "uid", "created_at",
-                    "receipt_items(id, name, quantity, price, unit_price)" // Add unit_price here
+                    "receipt_items(id, name, quantity, price, unit_price, vat_percentage)" // Add vat_percentage here
                 )
             ) {
                 filter {
@@ -361,7 +363,7 @@ class ReceiptRepositoryImpl @Inject constructor(
             val networkReceipts = supabaseClient.postgrest[RECEIPTS_TABLE].select(
                 columns = Columns.list(
                     "id", "receipt_date", "total_amount", "store_name", "uid", "created_at",
-                    "receipt_items(id, name, quantity, price, unit_price)" // Add unit_price here
+                    "receipt_items(id, name, quantity, price, unit_price, vat_percentage)" // Add vat_percentage here
                 )
             ) {
                 filter { eq("user_id", userId) }

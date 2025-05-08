@@ -16,9 +16,10 @@ import kotlinx.coroutines.launch
 private const val TAG = "HtmlExtractorWebView"
 private const val JS_INTERFACE_NAME = "AndroidHtmlExtractor"
 // Delay after page finished before attempting extraction
-private const val EXTRACTION_DELAY_MS = 15000L
+private const val EXTRACTION_DELAY_MS = 35000L
 // Delay after page started before checking for persistent challenge iframe
-private const val CHALLENGE_CHECK_DELAY_MS = 7000L // Shorter delay to check for challenge
+private const val CHALLENGE_CHECK_DELAY_MS = 27000L // Shorter delay to check for
+// challenge
 
 /**
  * A composable that loads a URL in a WebView, attempts to detect Cloudflare challenges,

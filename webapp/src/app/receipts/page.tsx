@@ -11,6 +11,7 @@ interface ReceiptItem {
   quantity: number;
   price: number; // Total price
   unit_price?: number | null; // Add optional unit price
+  vat_percentage?: number | null; // Add optional VAT percentage
 }
 
 interface Receipt {
@@ -116,18 +117,18 @@ export default function ReceiptsPage() {
             } else if (payload.eventType === 'UPDATE') {
               console.log('Realtime: Handling UPDATE');
               const updatedReceipt = payload.new as Receipt;
-               if (!updatedReceipt.receipt_items) {
-                 updatedReceipt.receipt_items = [];
-               }
+              if (!updatedReceipt.receipt_items) {
+                updatedReceipt.receipt_items = [];
+              }
               setReceipts((currentReceipts) =>
                 currentReceipts.map((receipt) =>
                   receipt.id === updatedReceipt.id ? updatedReceipt : receipt
                 )
               );
-               // If the updated receipt was selected, update the selection
-               setSelectedReceipt((currentSelected) =>
-                 currentSelected?.id === updatedReceipt.id ? updatedReceipt : currentSelected
-               );
+              // If the updated receipt was selected, update the selection
+              setSelectedReceipt((currentSelected) =>
+                currentSelected?.id === updatedReceipt.id ? updatedReceipt : currentSelected
+              );
             }
           }
         )
@@ -256,23 +257,85 @@ export default function ReceiptsPage() {
                 <h3 className="text-xl font-semibold mb-3 mt-6 text-gray-700 border-t pt-4">Items ({selectedReceipt.receipt_items.length})</h3>
                 {selectedReceipt.receipt_items.length > 0 ? (
                   <ul className="space-y-2 max-h-[50vh] overflow-y-auto pr-2">
-                    {selectedReceipt.receipt_items.map((item) => (
-                      <li key={item.id} className="flex justify-between items-start p-2 bg-gray-50 rounded"> {/* Changed items-center to items-start */}
-                        <div className="flex-1 mr-2">
-                          <span className="block text-sm text-gray-800">{item.name}</span> {/* Use block for stacking */}
-                          {/* Show quantity/unit price details if quantity is not 1 OR unit price exists */}
-                          {(item.quantity !== 1 || item.unit_price != null) && (
-                            <span className="block text-xs text-gray-500 mt-0.5">
-                              {/* Show quantity only if it's not 1 */}
-                              {item.quantity !== 1 ? `${item.quantity} x ` : ''}
-                              {/* Show unit price if it exists */}
-                              {item.unit_price != null ? formatCurrency(item.unit_price) : ''}
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-sm font-medium text-gray-700">{formatCurrency(item.price)}</span> {/* Total price */}
-                      </li>
-                    ))}
+                    {selectedReceipt.receipt_items.map((item) => {
+                      // --- Unit Price Discrepancy Check ---
+                      const calculatedUnitPrice = item.quantity !== 0 ? item.price / item.quantity : null;
+                      const unitPriceFromDb = item.unit_price;
+                      const vatPercentage = item.vat_percentage;
+                      const tolerance = 0.01; // e.g., 1 cent difference
+
+                      let showIndicator = false; // Changed from showWarning
+                      let indicatorEmoji = '';
+                      let indicatorTitle = '';
+
+                      if (calculatedUnitPrice != null && unitPriceFromDb != null) {
+                        const initialDiff = Math.abs(calculatedUnitPrice - unitPriceFromDb);
+
+                        if (initialDiff > tolerance) { // Only proceed if there's an initial difference
+                          // Initial check failed, try removing VAT
+                          if (vatPercentage != null && vatPercentage > 0) {
+                            const priceWithoutVat = item.price / (1 + vatPercentage / 100);
+                            const calculatedUnitPriceWithoutVat = item.quantity !== 0 ? priceWithoutVat / item.quantity : null;
+
+                            if (calculatedUnitPriceWithoutVat != null) {
+                               const diffWithoutVat = Math.abs(calculatedUnitPriceWithoutVat - unitPriceFromDb);
+                               if (diffWithoutVat <= tolerance) {
+                                 // Discrepancy likely due to VAT included in total price but not unit price
+                                 showIndicator = true;
+                                 indicatorEmoji = 'ℹ️'; // Use info emoji
+                                 indicatorTitle = `Info: Unit price from receipt (${formatCurrency(unitPriceFromDb)}) likely excludes VAT (${vatPercentage}%), while calculated price (${formatCurrency(calculatedUnitPrice)}) includes it.`;
+                               } else {
+                                 // Still different even after accounting for VAT
+                                 showIndicator = true;
+                                 indicatorEmoji = '⚠️'; // Use warning emoji
+                                 indicatorTitle = `Warning: Unit price from receipt (${formatCurrency(unitPriceFromDb)}) differs significantly from calculated price (${formatCurrency(calculatedUnitPrice)}), even considering VAT (${vatPercentage}%).`;
+                               }
+                            } else {
+                               // Couldn't calculate without VAT (e.g., quantity 0) - show standard warning
+                               showIndicator = true;
+                               indicatorEmoji = '⚠️'; // Use warning emoji
+                               indicatorTitle = `Warning: Unit price from receipt (${formatCurrency(unitPriceFromDb)}) differs from calculated price (${formatCurrency(calculatedUnitPrice)}). VAT adjustment could not be calculated.`;
+                            }
+                          } else {
+                            // No VAT info, stick to standard warning
+                            showIndicator = true;
+                            indicatorEmoji = '⚠️'; // Use warning emoji
+                            indicatorTitle = `Warning: Unit price from receipt (${formatCurrency(unitPriceFromDb)}) differs from calculated price (${formatCurrency(calculatedUnitPrice)}).`;
+                          }
+                        }
+                      }
+                      // --- End Discrepancy Check ---
+
+                      // Determine if the detail line should be shown
+                      const showDetailLine = item.quantity !== 1 || unitPriceFromDb != null;
+
+                      return ( // Return the list item JSX
+                        <li key={item.id} className="flex justify-between items-start p-2 bg-gray-50 rounded"> {/* Changed items-center to items-start */}
+                          <div className="flex-1 mr-2">
+                            <span className="block text-sm text-gray-800">{item.name}</span> {/* Use block for stacking */}
+                            {/* Show quantity/unit price details if needed */}
+                            {showDetailLine && (
+                              <span className="block text-xs text-gray-500 mt-0.5">
+                                {/* Show quantity only if it's not 1 */}
+                                {item.quantity !== 1 ? `${item.quantity} x ` : ''}
+                                {/* Show unit price if it exists */}
+                                {unitPriceFromDb != null ? formatCurrency(unitPriceFromDb) : ''}
+                                {/* Show indicator with dynamic tooltip and emoji if needed */}
+                                {showIndicator && (
+                                  <span
+                                    className="ml-1 cursor-help" // Add cursor-help for better UX
+                                    title={indicatorTitle} // Use the dynamically generated title
+                                  >
+                                    {indicatorEmoji} {/* Use the dynamic emoji */}
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">{formatCurrency(item.price)}</span> {/* Total price */}
+                        </li>
+                      ); // Close return statement
+                    })}
                   </ul>
                 ) : (
                   <p className="text-sm text-gray-500">No items found for this receipt.</p>

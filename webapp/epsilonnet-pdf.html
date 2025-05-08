@@ -1,0 +1,4646 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Epsilon Digital</title>
+    <base href="/" />
+
+    <link
+      rel="stylesheet"
+      href="_content/Telerik.UI.for.Blazor/css/kendo-theme-bootstrap/all.css?v=30mtVnY_sdwX1ZLc44EIf_JeEKyWU9Ujm_d9U9i3WTI"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400,600,800,300&amp;subset=latin,greek"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      href="css/app.css?v=_dmV7LYryud4ve6jwxQMsoh-JHdJjrWljKUsPrOSyNo"
+      rel="stylesheet"
+    />
+    <link
+      href="https://www.epsilondigital.gr/theme/custom.css"
+      rel="stylesheet"
+    />
+
+    <link
+      href="css/bootstrap/bootstrap.min.css?v=YLGeXaapI0_5IgZopewRJcFXomhRMlYYjugPLSyNjTY"
+      rel="stylesheet"
+    />
+    <link
+      href="css/kendo/kendo.common.min.css?v=DVdYJJXhSpf3iNgi093XRwVMsvAPOqQ3g73ri0l-1lk"
+      rel="stylesheet"
+    />
+    <link
+      href="css/atlas-kendo-theme.css?v=HBo-owo_ZEPbEiZ2YEZkYpvqmA20X6diVzzewzVSoz4"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.1/css/bootstrap.min.css"
+      integrity="sha512-siwe/oXMhSjGCwLn+scraPOWrJxHlUgMBMZXdPe2Tnk3I0x3ESCoLz7WZ5NTH6SZrywMY+PB1cjyqJ5jAluCOg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.9.1/font/bootstrap-icons.min.css"
+      integrity="sha512-5PV92qsds/16vyYIJo3T/As4m2d8b6oWYfoqV+vtizRB6KhF1F9kYzWzQmsO6T3z3QG2Xdhrx7FQ+5R1LiQdUA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <style>
+      .swal2-popup.swal2-toast {
+        flex-direction: row;
+        align-items: center;
+        width: auto;
+        padding: 0.625em;
+        overflow-y: hidden;
+        background: #fff;
+        box-shadow: 0 0 0.625em #d9d9d9;
+      }
+      .swal2-popup.swal2-toast .swal2-header {
+        flex-direction: row;
+        padding: 0;
+      }
+      .swal2-popup.swal2-toast .swal2-title {
+        flex-grow: 1;
+        justify-content: flex-start;
+        margin: 0 0.6em;
+        font-size: 1em;
+      }
+      .swal2-popup.swal2-toast .swal2-footer {
+        margin: 0.5em 0 0;
+        padding: 0.5em 0 0;
+        font-size: 0.8em;
+      }
+      .swal2-popup.swal2-toast .swal2-close {
+        position: static;
+        width: 0.8em;
+        height: 0.8em;
+        line-height: 0.8;
+      }
+      .swal2-popup.swal2-toast .swal2-content {
+        justify-content: flex-start;
+        padding: 0;
+        font-size: 1em;
+      }
+      .swal2-popup.swal2-toast .swal2-icon {
+        width: 2em;
+        min-width: 2em;
+        height: 2em;
+        margin: 0;
+      }
+      .swal2-popup.swal2-toast .swal2-icon .swal2-icon-content {
+        display: flex;
+        align-items: center;
+        font-size: 1.8em;
+        font-weight: 700;
+      }
+      @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+        .swal2-popup.swal2-toast .swal2-icon .swal2-icon-content {
+          font-size: 0.25em;
+        }
+      }
+      .swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-ring {
+        width: 2em;
+        height: 2em;
+      }
+      .swal2-popup.swal2-toast
+        .swal2-icon.swal2-error
+        [class^="swal2-x-mark-line"] {
+        top: 0.875em;
+        width: 1.375em;
+      }
+      .swal2-popup.swal2-toast
+        .swal2-icon.swal2-error
+        [class^="swal2-x-mark-line"][class$="left"] {
+        left: 0.3125em;
+      }
+      .swal2-popup.swal2-toast
+        .swal2-icon.swal2-error
+        [class^="swal2-x-mark-line"][class$="right"] {
+        right: 0.3125em;
+      }
+      .swal2-popup.swal2-toast .swal2-actions {
+        flex-basis: auto !important;
+        width: auto;
+        height: auto;
+        margin: 0 0.3125em;
+        padding: 0;
+      }
+      .swal2-popup.swal2-toast .swal2-styled {
+        margin: 0 0.3125em;
+        padding: 0.3125em 0.625em;
+        font-size: 1em;
+      }
+      .swal2-popup.swal2-toast .swal2-styled:focus {
+        box-shadow: 0 0 0 1px #fff, 0 0 0 3px rgba(100, 150, 200, 0.5);
+      }
+      .swal2-popup.swal2-toast .swal2-success {
+        border-color: #a5dc86;
+      }
+      .swal2-popup.swal2-toast
+        .swal2-success
+        [class^="swal2-success-circular-line"] {
+        position: absolute;
+        width: 1.6em;
+        height: 3em;
+        transform: rotate(45deg);
+        border-radius: 50%;
+      }
+      .swal2-popup.swal2-toast
+        .swal2-success
+        [class^="swal2-success-circular-line"][class$="left"] {
+        top: -0.8em;
+        left: -0.5em;
+        transform: rotate(-45deg);
+        transform-origin: 2em 2em;
+        border-radius: 4em 0 0 4em;
+      }
+      .swal2-popup.swal2-toast
+        .swal2-success
+        [class^="swal2-success-circular-line"][class$="right"] {
+        top: -0.25em;
+        left: 0.9375em;
+        transform-origin: 0 1.5em;
+        border-radius: 0 4em 4em 0;
+      }
+      .swal2-popup.swal2-toast .swal2-success .swal2-success-ring {
+        width: 2em;
+        height: 2em;
+      }
+      .swal2-popup.swal2-toast .swal2-success .swal2-success-fix {
+        top: 0;
+        left: 0.4375em;
+        width: 0.4375em;
+        height: 2.6875em;
+      }
+      .swal2-popup.swal2-toast .swal2-success [class^="swal2-success-line"] {
+        height: 0.3125em;
+      }
+      .swal2-popup.swal2-toast
+        .swal2-success
+        [class^="swal2-success-line"][class$="tip"] {
+        top: 1.125em;
+        left: 0.1875em;
+        width: 0.75em;
+      }
+      .swal2-popup.swal2-toast
+        .swal2-success
+        [class^="swal2-success-line"][class$="long"] {
+        top: 0.9375em;
+        right: 0.1875em;
+        width: 1.375em;
+      }
+      .swal2-popup.swal2-toast
+        .swal2-success.swal2-icon-show
+        .swal2-success-line-tip {
+        -webkit-animation: swal2-toast-animate-success-line-tip 0.75s;
+        animation: swal2-toast-animate-success-line-tip 0.75s;
+      }
+      .swal2-popup.swal2-toast
+        .swal2-success.swal2-icon-show
+        .swal2-success-line-long {
+        -webkit-animation: swal2-toast-animate-success-line-long 0.75s;
+        animation: swal2-toast-animate-success-line-long 0.75s;
+      }
+      .swal2-popup.swal2-toast.swal2-show {
+        -webkit-animation: swal2-toast-show 0.5s;
+        animation: swal2-toast-show 0.5s;
+      }
+      .swal2-popup.swal2-toast.swal2-hide {
+        -webkit-animation: swal2-toast-hide 0.1s forwards;
+        animation: swal2-toast-hide 0.1s forwards;
+      }
+      .swal2-container {
+        display: flex;
+        position: fixed;
+        z-index: 1060;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        padding: 0.625em;
+        overflow-x: hidden;
+        transition: background-color 0.1s;
+        -webkit-overflow-scrolling: touch;
+      }
+      .swal2-container.swal2-backdrop-show,
+      .swal2-container.swal2-noanimation {
+        background: rgba(0, 0, 0, 0.4);
+      }
+      .swal2-container.swal2-backdrop-hide {
+        background: 0 0 !important;
+      }
+      .swal2-container.swal2-top {
+        align-items: flex-start;
+      }
+      .swal2-container.swal2-top-left,
+      .swal2-container.swal2-top-start {
+        align-items: flex-start;
+        justify-content: flex-start;
+      }
+      .swal2-container.swal2-top-end,
+      .swal2-container.swal2-top-right {
+        align-items: flex-start;
+        justify-content: flex-end;
+      }
+      .swal2-container.swal2-center {
+        align-items: center;
+      }
+      .swal2-container.swal2-center-left,
+      .swal2-container.swal2-center-start {
+        align-items: center;
+        justify-content: flex-start;
+      }
+      .swal2-container.swal2-center-end,
+      .swal2-container.swal2-center-right {
+        align-items: center;
+        justify-content: flex-end;
+      }
+      .swal2-container.swal2-bottom {
+        align-items: flex-end;
+      }
+      .swal2-container.swal2-bottom-left,
+      .swal2-container.swal2-bottom-start {
+        align-items: flex-end;
+        justify-content: flex-start;
+      }
+      .swal2-container.swal2-bottom-end,
+      .swal2-container.swal2-bottom-right {
+        align-items: flex-end;
+        justify-content: flex-end;
+      }
+      .swal2-container.swal2-bottom-end > :first-child,
+      .swal2-container.swal2-bottom-left > :first-child,
+      .swal2-container.swal2-bottom-right > :first-child,
+      .swal2-container.swal2-bottom-start > :first-child,
+      .swal2-container.swal2-bottom > :first-child {
+        margin-top: auto;
+      }
+      .swal2-container.swal2-grow-fullscreen > .swal2-modal {
+        display: flex !important;
+        flex: 1;
+        align-self: stretch;
+        justify-content: center;
+      }
+      .swal2-container.swal2-grow-row > .swal2-modal {
+        display: flex !important;
+        flex: 1;
+        align-content: center;
+        justify-content: center;
+      }
+      .swal2-container.swal2-grow-column {
+        flex: 1;
+        flex-direction: column;
+      }
+      .swal2-container.swal2-grow-column.swal2-bottom,
+      .swal2-container.swal2-grow-column.swal2-center,
+      .swal2-container.swal2-grow-column.swal2-top {
+        align-items: center;
+      }
+      .swal2-container.swal2-grow-column.swal2-bottom-left,
+      .swal2-container.swal2-grow-column.swal2-bottom-start,
+      .swal2-container.swal2-grow-column.swal2-center-left,
+      .swal2-container.swal2-grow-column.swal2-center-start,
+      .swal2-container.swal2-grow-column.swal2-top-left,
+      .swal2-container.swal2-grow-column.swal2-top-start {
+        align-items: flex-start;
+      }
+      .swal2-container.swal2-grow-column.swal2-bottom-end,
+      .swal2-container.swal2-grow-column.swal2-bottom-right,
+      .swal2-container.swal2-grow-column.swal2-center-end,
+      .swal2-container.swal2-grow-column.swal2-center-right,
+      .swal2-container.swal2-grow-column.swal2-top-end,
+      .swal2-container.swal2-grow-column.swal2-top-right {
+        align-items: flex-end;
+      }
+      .swal2-container.swal2-grow-column > .swal2-modal {
+        display: flex !important;
+        flex: 1;
+        align-content: center;
+        justify-content: center;
+      }
+      .swal2-container.swal2-no-transition {
+        transition: none !important;
+      }
+      .swal2-container:not(.swal2-top):not(.swal2-top-start):not(
+          .swal2-top-end
+        ):not(.swal2-top-left):not(.swal2-top-right):not(
+          .swal2-center-start
+        ):not(.swal2-center-end):not(.swal2-center-left):not(
+          .swal2-center-right
+        ):not(.swal2-bottom):not(.swal2-bottom-start):not(
+          .swal2-bottom-end
+        ):not(.swal2-bottom-left):not(.swal2-bottom-right):not(
+          .swal2-grow-fullscreen
+        )
+        > .swal2-modal {
+        margin: auto;
+      }
+      @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+        .swal2-container .swal2-modal {
+          margin: 0 !important;
+        }
+      }
+      .swal2-popup {
+        display: none;
+        position: relative;
+        box-sizing: border-box;
+        flex-direction: column;
+        justify-content: center;
+        width: 32em;
+        max-width: 100%;
+        padding: 1.25em;
+        border: none;
+        border-radius: 5px;
+        background: #fff;
+        font-family: inherit;
+        font-size: 1rem;
+      }
+      .swal2-popup:focus {
+        outline: 0;
+      }
+      .swal2-popup.swal2-loading {
+        overflow-y: hidden;
+      }
+      .swal2-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 1.8em;
+      }
+      .swal2-title {
+        position: relative;
+        max-width: 100%;
+        margin: 0 0 0.4em;
+        padding: 0;
+        color: #595959;
+        font-size: 1.875em;
+        font-weight: 600;
+        text-align: center;
+        text-transform: none;
+        word-wrap: break-word;
+      }
+      .swal2-actions {
+        display: flex;
+        z-index: 1;
+        box-sizing: border-box;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin: 1.25em auto 0;
+        padding: 0 1.6em;
+      }
+      .swal2-actions:not(.swal2-loading) .swal2-styled[disabled] {
+        opacity: 0.4;
+      }
+      .swal2-actions:not(.swal2-loading) .swal2-styled:hover {
+        background-image: linear-gradient(
+          rgba(0, 0, 0, 0.1),
+          rgba(0, 0, 0, 0.1)
+        );
+      }
+      .swal2-actions:not(.swal2-loading) .swal2-styled:active {
+        background-image: linear-gradient(
+          rgba(0, 0, 0, 0.2),
+          rgba(0, 0, 0, 0.2)
+        );
+      }
+      .swal2-loader {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 2.2em;
+        height: 2.2em;
+        margin: 0 1.875em;
+        -webkit-animation: swal2-rotate-loading 1.5s linear 0s infinite normal;
+        animation: swal2-rotate-loading 1.5s linear 0s infinite normal;
+        border-width: 0.25em;
+        border-style: solid;
+        border-radius: 100%;
+        border-color: #2778c4 transparent #2778c4 transparent;
+      }
+      .swal2-styled {
+        margin: 0.3125em;
+        padding: 0.625em 1.1em;
+        box-shadow: none;
+        font-weight: 500;
+      }
+      .swal2-styled:not([disabled]) {
+        cursor: pointer;
+      }
+      .swal2-styled.swal2-confirm {
+        border: 0;
+        border-radius: 0.25em;
+        background: initial;
+        background-color: #2778c4;
+        color: #fff;
+        font-size: 1.0625em;
+      }
+      .swal2-styled.swal2-deny {
+        border: 0;
+        border-radius: 0.25em;
+        background: initial;
+        background-color: #d14529;
+        color: #fff;
+        font-size: 1.0625em;
+      }
+      .swal2-styled.swal2-cancel {
+        border: 0;
+        border-radius: 0.25em;
+        background: initial;
+        background-color: #757575;
+        color: #fff;
+        font-size: 1.0625em;
+      }
+      .swal2-styled:focus {
+        outline: 0;
+        box-shadow: 0 0 0 3px rgba(100, 150, 200, 0.5);
+      }
+      .swal2-styled::-moz-focus-inner {
+        border: 0;
+      }
+      .swal2-footer {
+        justify-content: center;
+        margin: 1.25em 0 0;
+        padding: 1em 0 0;
+        border-top: 1px solid #eee;
+        color: #545454;
+        font-size: 1em;
+      }
+      .swal2-timer-progress-bar-container {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 0.25em;
+        overflow: hidden;
+        border-bottom-right-radius: 5px;
+        border-bottom-left-radius: 5px;
+      }
+      .swal2-timer-progress-bar {
+        width: 100%;
+        height: 0.25em;
+        background: rgba(0, 0, 0, 0.2);
+      }
+      .swal2-image {
+        max-width: 100%;
+        margin: 1.25em auto;
+      }
+      .swal2-close {
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        right: 0;
+        align-items: center;
+        justify-content: center;
+        width: 1.2em;
+        height: 1.2em;
+        padding: 0;
+        overflow: hidden;
+        transition: color 0.1s ease-out;
+        border: none;
+        border-radius: 5px;
+        background: 0 0;
+        color: #ccc;
+        font-family: serif;
+        font-size: 2.5em;
+        line-height: 1.2;
+        cursor: pointer;
+      }
+      .swal2-close:hover {
+        transform: none;
+        background: 0 0;
+        color: #f27474;
+      }
+      .swal2-close:focus {
+        outline: 0;
+        box-shadow: inset 0 0 0 3px rgba(100, 150, 200, 0.5);
+      }
+      .swal2-close::-moz-focus-inner {
+        border: 0;
+      }
+      .swal2-content {
+        z-index: 1;
+        justify-content: center;
+        margin: 0;
+        padding: 0 1.6em;
+        color: #545454;
+        font-size: 1.125em;
+        font-weight: 400;
+        line-height: normal;
+        text-align: center;
+        word-wrap: break-word;
+      }
+      .swal2-checkbox,
+      .swal2-file,
+      .swal2-input,
+      .swal2-radio,
+      .swal2-select,
+      .swal2-textarea {
+        margin: 1em auto;
+      }
+      .swal2-file,
+      .swal2-input,
+      .swal2-textarea {
+        box-sizing: border-box;
+        width: 100%;
+        transition: border-color 0.3s, box-shadow 0.3s;
+        border: 1px solid #d9d9d9;
+        border-radius: 0.1875em;
+        background: inherit;
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.06);
+        color: inherit;
+        font-size: 1.125em;
+      }
+      .swal2-file.swal2-inputerror,
+      .swal2-input.swal2-inputerror,
+      .swal2-textarea.swal2-inputerror {
+        border-color: #f27474 !important;
+        box-shadow: 0 0 2px #f27474 !important;
+      }
+      .swal2-file:focus,
+      .swal2-input:focus,
+      .swal2-textarea:focus {
+        border: 1px solid #b4dbed;
+        outline: 0;
+        box-shadow: 0 0 0 3px rgba(100, 150, 200, 0.5);
+      }
+      .swal2-file::-moz-placeholder,
+      .swal2-input::-moz-placeholder,
+      .swal2-textarea::-moz-placeholder {
+        color: #ccc;
+      }
+      .swal2-file:-ms-input-placeholder,
+      .swal2-input:-ms-input-placeholder,
+      .swal2-textarea:-ms-input-placeholder {
+        color: #ccc;
+      }
+      .swal2-file::placeholder,
+      .swal2-input::placeholder,
+      .swal2-textarea::placeholder {
+        color: #ccc;
+      }
+      .swal2-range {
+        margin: 1em auto;
+        background: #fff;
+      }
+      .swal2-range input {
+        width: 80%;
+      }
+      .swal2-range output {
+        width: 20%;
+        color: inherit;
+        font-weight: 600;
+        text-align: center;
+      }
+      .swal2-range input,
+      .swal2-range output {
+        height: 2.625em;
+        padding: 0;
+        font-size: 1.125em;
+        line-height: 2.625em;
+      }
+      .swal2-input {
+        height: 2.625em;
+        padding: 0 0.75em;
+      }
+      .swal2-input[type="number"] {
+        max-width: 10em;
+      }
+      .swal2-file {
+        background: inherit;
+        font-size: 1.125em;
+      }
+      .swal2-textarea {
+        height: 6.75em;
+        padding: 0.75em;
+      }
+      .swal2-select {
+        min-width: 50%;
+        max-width: 100%;
+        padding: 0.375em 0.625em;
+        background: inherit;
+        color: inherit;
+        font-size: 1.125em;
+      }
+      .swal2-checkbox,
+      .swal2-radio {
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        color: inherit;
+      }
+      .swal2-checkbox label,
+      .swal2-radio label {
+        margin: 0 0.6em;
+        font-size: 1.125em;
+      }
+      .swal2-checkbox input,
+      .swal2-radio input {
+        margin: 0 0.4em;
+      }
+      .swal2-input-label {
+        display: flex;
+        justify-content: center;
+        margin: 1em auto;
+      }
+      .swal2-validation-message {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        margin: 0 -2.7em;
+        padding: 0.625em;
+        overflow: hidden;
+        background: #f0f0f0;
+        color: #666;
+        font-size: 1em;
+        font-weight: 300;
+      }
+      .swal2-validation-message::before {
+        content: "!";
+        display: inline-block;
+        width: 1.5em;
+        min-width: 1.5em;
+        height: 1.5em;
+        margin: 0 0.625em;
+        border-radius: 50%;
+        background-color: #f27474;
+        color: #fff;
+        font-weight: 600;
+        line-height: 1.5em;
+        text-align: center;
+      }
+      .swal2-icon {
+        position: relative;
+        box-sizing: content-box;
+        justify-content: center;
+        width: 5em;
+        height: 5em;
+        margin: 1.25em auto 1.875em;
+        border: 0.25em solid transparent;
+        border-radius: 50%;
+        font-family: inherit;
+        line-height: 5em;
+        cursor: default;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+      .swal2-icon .swal2-icon-content {
+        display: flex;
+        align-items: center;
+        font-size: 3.75em;
+      }
+      .swal2-icon.swal2-error {
+        border-color: #f27474;
+        color: #f27474;
+      }
+      .swal2-icon.swal2-error .swal2-x-mark {
+        position: relative;
+        flex-grow: 1;
+      }
+      .swal2-icon.swal2-error [class^="swal2-x-mark-line"] {
+        display: block;
+        position: absolute;
+        top: 2.3125em;
+        width: 2.9375em;
+        height: 0.3125em;
+        border-radius: 0.125em;
+        background-color: #f27474;
+      }
+      .swal2-icon.swal2-error [class^="swal2-x-mark-line"][class$="left"] {
+        left: 1.0625em;
+        transform: rotate(45deg);
+      }
+      .swal2-icon.swal2-error [class^="swal2-x-mark-line"][class$="right"] {
+        right: 1em;
+        transform: rotate(-45deg);
+      }
+      .swal2-icon.swal2-error.swal2-icon-show {
+        -webkit-animation: swal2-animate-error-icon 0.5s;
+        animation: swal2-animate-error-icon 0.5s;
+      }
+      .swal2-icon.swal2-error.swal2-icon-show .swal2-x-mark {
+        -webkit-animation: swal2-animate-error-x-mark 0.5s;
+        animation: swal2-animate-error-x-mark 0.5s;
+      }
+      .swal2-icon.swal2-warning {
+        border-color: #facea8;
+        color: #f8bb86;
+      }
+      .swal2-icon.swal2-info {
+        border-color: #9de0f6;
+        color: #3fc3ee;
+      }
+      .swal2-icon.swal2-question {
+        border-color: #c9dae1;
+        color: #87adbd;
+      }
+      .swal2-icon.swal2-success {
+        border-color: #a5dc86;
+        color: #a5dc86;
+      }
+      .swal2-icon.swal2-success [class^="swal2-success-circular-line"] {
+        position: absolute;
+        width: 3.75em;
+        height: 7.5em;
+        transform: rotate(45deg);
+        border-radius: 50%;
+      }
+      .swal2-icon.swal2-success
+        [class^="swal2-success-circular-line"][class$="left"] {
+        top: -0.4375em;
+        left: -2.0635em;
+        transform: rotate(-45deg);
+        transform-origin: 3.75em 3.75em;
+        border-radius: 7.5em 0 0 7.5em;
+      }
+      .swal2-icon.swal2-success
+        [class^="swal2-success-circular-line"][class$="right"] {
+        top: -0.6875em;
+        left: 1.875em;
+        transform: rotate(-45deg);
+        transform-origin: 0 3.75em;
+        border-radius: 0 7.5em 7.5em 0;
+      }
+      .swal2-icon.swal2-success .swal2-success-ring {
+        position: absolute;
+        z-index: 2;
+        top: -0.25em;
+        left: -0.25em;
+        box-sizing: content-box;
+        width: 100%;
+        height: 100%;
+        border: 0.25em solid rgba(165, 220, 134, 0.3);
+        border-radius: 50%;
+      }
+      .swal2-icon.swal2-success .swal2-success-fix {
+        position: absolute;
+        z-index: 1;
+        top: 0.5em;
+        left: 1.625em;
+        width: 0.4375em;
+        height: 5.625em;
+        transform: rotate(-45deg);
+      }
+      .swal2-icon.swal2-success [class^="swal2-success-line"] {
+        display: block;
+        position: absolute;
+        z-index: 2;
+        height: 0.3125em;
+        border-radius: 0.125em;
+        background-color: #a5dc86;
+      }
+      .swal2-icon.swal2-success [class^="swal2-success-line"][class$="tip"] {
+        top: 2.875em;
+        left: 0.8125em;
+        width: 1.5625em;
+        transform: rotate(45deg);
+      }
+      .swal2-icon.swal2-success [class^="swal2-success-line"][class$="long"] {
+        top: 2.375em;
+        right: 0.5em;
+        width: 2.9375em;
+        transform: rotate(-45deg);
+      }
+      .swal2-icon.swal2-success.swal2-icon-show .swal2-success-line-tip {
+        -webkit-animation: swal2-animate-success-line-tip 0.75s;
+        animation: swal2-animate-success-line-tip 0.75s;
+      }
+      .swal2-icon.swal2-success.swal2-icon-show .swal2-success-line-long {
+        -webkit-animation: swal2-animate-success-line-long 0.75s;
+        animation: swal2-animate-success-line-long 0.75s;
+      }
+      .swal2-icon.swal2-success.swal2-icon-show
+        .swal2-success-circular-line-right {
+        -webkit-animation: swal2-rotate-success-circular-line 4.25s ease-in;
+        animation: swal2-rotate-success-circular-line 4.25s ease-in;
+      }
+      .swal2-progress-steps {
+        flex-wrap: wrap;
+        align-items: center;
+        max-width: 100%;
+        margin: 0 0 1.25em;
+        padding: 0;
+        background: inherit;
+        font-weight: 600;
+      }
+      .swal2-progress-steps li {
+        display: inline-block;
+        position: relative;
+      }
+      .swal2-progress-steps .swal2-progress-step {
+        z-index: 20;
+        flex-shrink: 0;
+        width: 2em;
+        height: 2em;
+        border-radius: 2em;
+        background: #2778c4;
+        color: #fff;
+        line-height: 2em;
+        text-align: center;
+      }
+      .swal2-progress-steps .swal2-progress-step.swal2-active-progress-step {
+        background: #2778c4;
+      }
+      .swal2-progress-steps
+        .swal2-progress-step.swal2-active-progress-step
+        ~ .swal2-progress-step {
+        background: #add8e6;
+        color: #fff;
+      }
+      .swal2-progress-steps
+        .swal2-progress-step.swal2-active-progress-step
+        ~ .swal2-progress-step-line {
+        background: #add8e6;
+      }
+      .swal2-progress-steps .swal2-progress-step-line {
+        z-index: 10;
+        flex-shrink: 0;
+        width: 2.5em;
+        height: 0.4em;
+        margin: 0 -1px;
+        background: #2778c4;
+      }
+      [class^="swal2"] {
+        -webkit-tap-highlight-color: transparent;
+      }
+      .swal2-show {
+        -webkit-animation: swal2-show 0.3s;
+        animation: swal2-show 0.3s;
+      }
+      .swal2-hide {
+        -webkit-animation: swal2-hide 0.15s forwards;
+        animation: swal2-hide 0.15s forwards;
+      }
+      .swal2-noanimation {
+        transition: none;
+      }
+      .swal2-scrollbar-measure {
+        position: absolute;
+        top: -9999px;
+        width: 50px;
+        height: 50px;
+        overflow: scroll;
+      }
+      .swal2-rtl .swal2-close {
+        right: auto;
+        left: 0;
+      }
+      .swal2-rtl .swal2-timer-progress-bar {
+        right: 0;
+        left: auto;
+      }
+      @supports (-ms-accelerator: true) {
+        .swal2-range input {
+          width: 100% !important;
+        }
+        .swal2-range output {
+          display: none;
+        }
+      }
+      @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+        .swal2-range input {
+          width: 100% !important;
+        }
+        .swal2-range output {
+          display: none;
+        }
+      }
+      @-webkit-keyframes swal2-toast-show {
+        0% {
+          transform: translateY(-0.625em) rotateZ(2deg);
+        }
+        33% {
+          transform: translateY(0) rotateZ(-2deg);
+        }
+        66% {
+          transform: translateY(0.3125em) rotateZ(2deg);
+        }
+        100% {
+          transform: translateY(0) rotateZ(0);
+        }
+      }
+      @keyframes swal2-toast-show {
+        0% {
+          transform: translateY(-0.625em) rotateZ(2deg);
+        }
+        33% {
+          transform: translateY(0) rotateZ(-2deg);
+        }
+        66% {
+          transform: translateY(0.3125em) rotateZ(2deg);
+        }
+        100% {
+          transform: translateY(0) rotateZ(0);
+        }
+      }
+      @-webkit-keyframes swal2-toast-hide {
+        100% {
+          transform: rotateZ(1deg);
+          opacity: 0;
+        }
+      }
+      @keyframes swal2-toast-hide {
+        100% {
+          transform: rotateZ(1deg);
+          opacity: 0;
+        }
+      }
+      @-webkit-keyframes swal2-toast-animate-success-line-tip {
+        0% {
+          top: 0.5625em;
+          left: 0.0625em;
+          width: 0;
+        }
+        54% {
+          top: 0.125em;
+          left: 0.125em;
+          width: 0;
+        }
+        70% {
+          top: 0.625em;
+          left: -0.25em;
+          width: 1.625em;
+        }
+        84% {
+          top: 1.0625em;
+          left: 0.75em;
+          width: 0.5em;
+        }
+        100% {
+          top: 1.125em;
+          left: 0.1875em;
+          width: 0.75em;
+        }
+      }
+      @keyframes swal2-toast-animate-success-line-tip {
+        0% {
+          top: 0.5625em;
+          left: 0.0625em;
+          width: 0;
+        }
+        54% {
+          top: 0.125em;
+          left: 0.125em;
+          width: 0;
+        }
+        70% {
+          top: 0.625em;
+          left: -0.25em;
+          width: 1.625em;
+        }
+        84% {
+          top: 1.0625em;
+          left: 0.75em;
+          width: 0.5em;
+        }
+        100% {
+          top: 1.125em;
+          left: 0.1875em;
+          width: 0.75em;
+        }
+      }
+      @-webkit-keyframes swal2-toast-animate-success-line-long {
+        0% {
+          top: 1.625em;
+          right: 1.375em;
+          width: 0;
+        }
+        65% {
+          top: 1.25em;
+          right: 0.9375em;
+          width: 0;
+        }
+        84% {
+          top: 0.9375em;
+          right: 0;
+          width: 1.125em;
+        }
+        100% {
+          top: 0.9375em;
+          right: 0.1875em;
+          width: 1.375em;
+        }
+      }
+      @keyframes swal2-toast-animate-success-line-long {
+        0% {
+          top: 1.625em;
+          right: 1.375em;
+          width: 0;
+        }
+        65% {
+          top: 1.25em;
+          right: 0.9375em;
+          width: 0;
+        }
+        84% {
+          top: 0.9375em;
+          right: 0;
+          width: 1.125em;
+        }
+        100% {
+          top: 0.9375em;
+          right: 0.1875em;
+          width: 1.375em;
+        }
+      }
+      @-webkit-keyframes swal2-show {
+        0% {
+          transform: scale(0.7);
+        }
+        45% {
+          transform: scale(1.05);
+        }
+        80% {
+          transform: scale(0.95);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      @keyframes swal2-show {
+        0% {
+          transform: scale(0.7);
+        }
+        45% {
+          transform: scale(1.05);
+        }
+        80% {
+          transform: scale(0.95);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      @-webkit-keyframes swal2-hide {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(0.5);
+          opacity: 0;
+        }
+      }
+      @keyframes swal2-hide {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(0.5);
+          opacity: 0;
+        }
+      }
+      @-webkit-keyframes swal2-animate-success-line-tip {
+        0% {
+          top: 1.1875em;
+          left: 0.0625em;
+          width: 0;
+        }
+        54% {
+          top: 1.0625em;
+          left: 0.125em;
+          width: 0;
+        }
+        70% {
+          top: 2.1875em;
+          left: -0.375em;
+          width: 3.125em;
+        }
+        84% {
+          top: 3em;
+          left: 1.3125em;
+          width: 1.0625em;
+        }
+        100% {
+          top: 2.8125em;
+          left: 0.8125em;
+          width: 1.5625em;
+        }
+      }
+      @keyframes swal2-animate-success-line-tip {
+        0% {
+          top: 1.1875em;
+          left: 0.0625em;
+          width: 0;
+        }
+        54% {
+          top: 1.0625em;
+          left: 0.125em;
+          width: 0;
+        }
+        70% {
+          top: 2.1875em;
+          left: -0.375em;
+          width: 3.125em;
+        }
+        84% {
+          top: 3em;
+          left: 1.3125em;
+          width: 1.0625em;
+        }
+        100% {
+          top: 2.8125em;
+          left: 0.8125em;
+          width: 1.5625em;
+        }
+      }
+      @-webkit-keyframes swal2-animate-success-line-long {
+        0% {
+          top: 3.375em;
+          right: 2.875em;
+          width: 0;
+        }
+        65% {
+          top: 3.375em;
+          right: 2.875em;
+          width: 0;
+        }
+        84% {
+          top: 2.1875em;
+          right: 0;
+          width: 3.4375em;
+        }
+        100% {
+          top: 2.375em;
+          right: 0.5em;
+          width: 2.9375em;
+        }
+      }
+      @keyframes swal2-animate-success-line-long {
+        0% {
+          top: 3.375em;
+          right: 2.875em;
+          width: 0;
+        }
+        65% {
+          top: 3.375em;
+          right: 2.875em;
+          width: 0;
+        }
+        84% {
+          top: 2.1875em;
+          right: 0;
+          width: 3.4375em;
+        }
+        100% {
+          top: 2.375em;
+          right: 0.5em;
+          width: 2.9375em;
+        }
+      }
+      @-webkit-keyframes swal2-rotate-success-circular-line {
+        0% {
+          transform: rotate(-45deg);
+        }
+        5% {
+          transform: rotate(-45deg);
+        }
+        12% {
+          transform: rotate(-405deg);
+        }
+        100% {
+          transform: rotate(-405deg);
+        }
+      }
+      @keyframes swal2-rotate-success-circular-line {
+        0% {
+          transform: rotate(-45deg);
+        }
+        5% {
+          transform: rotate(-45deg);
+        }
+        12% {
+          transform: rotate(-405deg);
+        }
+        100% {
+          transform: rotate(-405deg);
+        }
+      }
+      @-webkit-keyframes swal2-animate-error-x-mark {
+        0% {
+          margin-top: 1.625em;
+          transform: scale(0.4);
+          opacity: 0;
+        }
+        50% {
+          margin-top: 1.625em;
+          transform: scale(0.4);
+          opacity: 0;
+        }
+        80% {
+          margin-top: -0.375em;
+          transform: scale(1.15);
+        }
+        100% {
+          margin-top: 0;
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      @keyframes swal2-animate-error-x-mark {
+        0% {
+          margin-top: 1.625em;
+          transform: scale(0.4);
+          opacity: 0;
+        }
+        50% {
+          margin-top: 1.625em;
+          transform: scale(0.4);
+          opacity: 0;
+        }
+        80% {
+          margin-top: -0.375em;
+          transform: scale(1.15);
+        }
+        100% {
+          margin-top: 0;
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      @-webkit-keyframes swal2-animate-error-icon {
+        0% {
+          transform: rotateX(100deg);
+          opacity: 0;
+        }
+        100% {
+          transform: rotateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes swal2-animate-error-icon {
+        0% {
+          transform: rotateX(100deg);
+          opacity: 0;
+        }
+        100% {
+          transform: rotateX(0);
+          opacity: 1;
+        }
+      }
+      @-webkit-keyframes swal2-rotate-loading {
+        0% {
+          transform: rotate(0);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes swal2-rotate-loading {
+        0% {
+          transform: rotate(0);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      body.swal2-shown:not(.swal2-no-backdrop):not(.swal2-toast-shown) {
+        overflow: hidden;
+      }
+      body.swal2-height-auto {
+        height: auto !important;
+      }
+      body.swal2-no-backdrop .swal2-container {
+        top: auto;
+        right: auto;
+        bottom: auto;
+        left: auto;
+        max-width: calc(100% - 0.625em * 2);
+        background-color: transparent !important;
+      }
+      body.swal2-no-backdrop .swal2-container > .swal2-modal {
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+      }
+      body.swal2-no-backdrop .swal2-container.swal2-top {
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      body.swal2-no-backdrop .swal2-container.swal2-top-left,
+      body.swal2-no-backdrop .swal2-container.swal2-top-start {
+        top: 0;
+        left: 0;
+      }
+      body.swal2-no-backdrop .swal2-container.swal2-top-end,
+      body.swal2-no-backdrop .swal2-container.swal2-top-right {
+        top: 0;
+        right: 0;
+      }
+      body.swal2-no-backdrop .swal2-container.swal2-center {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      body.swal2-no-backdrop .swal2-container.swal2-center-left,
+      body.swal2-no-backdrop .swal2-container.swal2-center-start {
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+      }
+      body.swal2-no-backdrop .swal2-container.swal2-center-end,
+      body.swal2-no-backdrop .swal2-container.swal2-center-right {
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+      }
+      body.swal2-no-backdrop .swal2-container.swal2-bottom {
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      body.swal2-no-backdrop .swal2-container.swal2-bottom-left,
+      body.swal2-no-backdrop .swal2-container.swal2-bottom-start {
+        bottom: 0;
+        left: 0;
+      }
+      body.swal2-no-backdrop .swal2-container.swal2-bottom-end,
+      body.swal2-no-backdrop .swal2-container.swal2-bottom-right {
+        right: 0;
+        bottom: 0;
+      }
+      @media print {
+        body.swal2-shown:not(.swal2-no-backdrop):not(.swal2-toast-shown) {
+          overflow-y: scroll !important;
+        }
+        body.swal2-shown:not(.swal2-no-backdrop):not(.swal2-toast-shown)
+          > [aria-hidden="true"] {
+          display: none;
+        }
+        body.swal2-shown:not(.swal2-no-backdrop):not(.swal2-toast-shown)
+          .swal2-container {
+          position: static !important;
+        }
+      }
+      body.swal2-toast-shown .swal2-container {
+        background-color: transparent;
+      }
+      body.swal2-toast-shown .swal2-container.swal2-top {
+        top: 0;
+        right: auto;
+        bottom: auto;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      body.swal2-toast-shown .swal2-container.swal2-top-end,
+      body.swal2-toast-shown .swal2-container.swal2-top-right {
+        top: 0;
+        right: 0;
+        bottom: auto;
+        left: auto;
+      }
+      body.swal2-toast-shown .swal2-container.swal2-top-left,
+      body.swal2-toast-shown .swal2-container.swal2-top-start {
+        top: 0;
+        right: auto;
+        bottom: auto;
+        left: 0;
+      }
+      body.swal2-toast-shown .swal2-container.swal2-center-left,
+      body.swal2-toast-shown .swal2-container.swal2-center-start {
+        top: 50%;
+        right: auto;
+        bottom: auto;
+        left: 0;
+        transform: translateY(-50%);
+      }
+      body.swal2-toast-shown .swal2-container.swal2-center {
+        top: 50%;
+        right: auto;
+        bottom: auto;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      body.swal2-toast-shown .swal2-container.swal2-center-end,
+      body.swal2-toast-shown .swal2-container.swal2-center-right {
+        top: 50%;
+        right: 0;
+        bottom: auto;
+        left: auto;
+        transform: translateY(-50%);
+      }
+      body.swal2-toast-shown .swal2-container.swal2-bottom-left,
+      body.swal2-toast-shown .swal2-container.swal2-bottom-start {
+        top: auto;
+        right: auto;
+        bottom: 0;
+        left: 0;
+      }
+      body.swal2-toast-shown .swal2-container.swal2-bottom {
+        top: auto;
+        right: auto;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      body.swal2-toast-shown .swal2-container.swal2-bottom-end,
+      body.swal2-toast-shown .swal2-container.swal2-bottom-right {
+        top: auto;
+        right: 0;
+        bottom: 0;
+        left: auto;
+      }
+      body.swal2-toast-column .swal2-toast {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      body.swal2-toast-column .swal2-toast .swal2-actions {
+        flex: 1;
+        align-self: stretch;
+        height: 2.2em;
+        margin-top: 0.3125em;
+      }
+      body.swal2-toast-column .swal2-toast .swal2-loading {
+        justify-content: center;
+      }
+      body.swal2-toast-column .swal2-toast .swal2-input {
+        height: 2em;
+        margin: 0.3125em auto;
+        font-size: 1em;
+      }
+      body.swal2-toast-column .swal2-toast .swal2-validation-message {
+        font-size: 1em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!--!--><!--!--><!--!--><!--!-->
+    <!--!--><!--!--><!--!-->
+
+    <!--!-->
+    <!--!--><!--!-->
+    <!--!-->
+    <h1 class="docViewer-header">DOC VIEWER</h1>
+    <div class="main-content -docViewer -with-header -normal-sidebar">
+      <div class="doc-header">
+        <div class="logo mr-5">
+          <img
+            src="https://www.epsilondigital.gr/theme/Logos/logo-white.svg"
+            alt="logo"
+            width="130px"
+          />
+        </div>
+        <div class="side-bar-toggle">
+          <!--!--><svg role="img" title="profile">
+            <use href="images/icons.svg#icon-bar"></use>
+          </svg>
+        </div>
+        <div class="doc-actions">
+          <div class="custom-switch d-inline mr-5">
+            <!--!--><label class="text-white">PDF</label>
+            <!--!--><!--!--><!--!-->
+
+            <span
+              class="k-switch telerik-blazor k-switch-on k-rounded-full k-switch-md"
+              data-id="0dbd02d7-7de3-472c-9dcd-eaf2df4715a9"
+              dir="ltr"
+              tabindex="0"
+              role="switch"
+              aria-checked="true"
+              aria-label="On"
+              ><!--!-->
+              <input
+                type="checkbox"
+                value="true"
+                tabindex="-1"
+                aria-hidden="true"
+                style="display: none"
+              /><!--!-->
+              <span class="k-switch-track k-rounded-full"
+                ><!--!-->
+                <span class="k-switch-label-on">On</span
+                ><!--!-->
+                <span class="k-switch-label-off" aria-hidden="true">Off</span
+                ><!--!--> </span
+              ><!--!-->
+              <span class="k-switch-thumb-wrap"
+                ><!--!-->
+                <span class="k-switch-thumb k-rounded-full"></span
+                ><!--!--> </span
+              ><!--!-->
+            </span>
+          </div>
+          <span class="doc-actions__title">Save as</span
+          ><!--!-->
+          <span class="doc-actions__toggle" onclick="toggleMenu();">Save</span>
+          <ul class="doc-actions__list">
+            <li>
+              <a
+                class="btn"
+                title="Save as PDF"
+                href="/filedocument/getfile?fileType=2&amp;documentId=885065f9-5bc7-4a5a-aa27-08dd733c6ed3"
+                download="17025731-0014-9-01-914-126800-5.pdf"
+                >PDF</a
+              >
+            </li>
+            <li>
+              <a
+                class="btn"
+                title="Save as UBL 2.1"
+                href="/filedocument/getfile?fileType=4&amp;documentId=885065f9-5bc7-4a5a-aa27-08dd733c6ed3"
+                download="Invoice.xml"
+                >UBL 2.1</a
+              >
+            </li>
+            <li>
+              <a
+                class="btn"
+                title="Save as myData"
+                href="/filedocument/getfile?fileType=3&amp;documentId=885065f9-5bc7-4a5a-aa27-08dd733c6ed3"
+                download="MyData.xml"
+                >myData</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div id="doc-info" class="doc-info-panel sidebar">
+        <div class="sidebar-content">
+          <div class="nav-wrapper" data-simplebar="">
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <div class="nav-header">
+                  <span style="font-size: 1.2rem">POS Payments</span>
+                </div>
+                <!--!-->
+                <ul class="subnav -visible">
+                  <li
+                    class="subnav-item"
+                    style="border-top: 1px solid; padding: 0.7rem"
+                  >
+                    <div style="word-break: break-all">
+                      <strong>Date:</strong> 05/04/2025
+                    </div>
+                    <!--!-->
+                    <div style="word-break: break-all">
+                      <strong>Provider's Signature:</strong>
+                      MEUCIQDIzqUW0NptUS0ZHfU0jA8MjfCDSJcITHiGnyU3PEbPWgIgF8Yqer6SQ3qVMiH1lfTfckRd19jpZp98QiPGLen4CDg=
+                    </div>
+                    <!--!-->
+                    <div style="word-break: break-all">
+                      <strong>Transaction Id:</strong> 011;90;90075;906915
+                    </div>
+                    <div style="display: flex; justify-content: space-between">
+                      <span><strong>Tip:</strong> 0.00</span
+                      ><span style="font-size: 1rem"
+                        ><strong>Amount:</strong> 60.93</span
+                      >
+                    </div>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="doc-body document-viewer__container" style="">
+        <!--!--><!--!--><!--!-->
+
+        <!--!--><!--!-->
+        <!--!--><!--!--><!--!-->
+        <!--!-->
+        <!--!-->
+        <!--!-->
+
+        <div
+          class="telerik-blazor pdf-viewer-wrapper k-pdf-viewer"
+          data-id="d4998a2e-ac18-45d5-8cd5-d9f35d244b6f"
+          dir="ltr"
+          style="height: 900px"
+        >
+          <!--!-->
+          <!--!--><!--!--><!--!-->
+          <!--!-->
+          <div
+            class="k-loader-container telerik-blazor k-loader-container-md k-loader-top"
+            dir="ltr"
+            style="display: none"
+            data-id="82d26499-5868-4946-9bc5-1f7f5ba35e1f"
+          >
+            <!--!-->
+            <div class="k-loader-container-overlay k-overlay-light"></div>
+            <!--!-->
+            <!--!-->
+            <div class="k-loader-container-inner">
+              <!--!-->
+              <!--!-->
+              <!--!--><!--!--><!--!-->
+
+              <div
+                class="k-loader telerik-blazor k-loader-spinner-3 k-loader-lg k-loader-primary"
+                dir="ltr"
+              >
+                <!--!-->
+                <div class="k-loader-canvas">
+                  <!--!-->
+                  <!--!-->
+                  <span class="k-loader-segment"></span>
+                  <!--!-->
+                  <span class="k-loader-segment"></span>
+                  <!--!-->
+                  <span class="k-loader-segment"></span>
+                </div>
+                <!--!-->
+              </div>
+              <!--!-->
+              <!--!-->
+            </div>
+            <!--!-->
+          </div>
+          <!--!-->
+          <!--!-->
+          <!--!-->
+          <!--!-->
+          <!--!--><!--!-->
+          <!--!--><!--!--><!--!-->
+          <!--!-->
+          <!--!--><!--!--><!--!-->
+          <!--!-->
+          <!--!-->
+          <!--!-->
+
+          <!--!--><!--!-->
+          <!--!--><!--!-->
+          <!--!--><!--!--><!--!-->
+
+          <!--!--><!--!-->
+          <!--!-->
+          <!--!-->
+          <!--!-->
+
+          <div
+            class="k-toolbar telerik-blazor k-toolbar-md"
+            role="toolbar"
+            data-id="c08c6863-4aa3-4b87-a24e-6de1c70ca87d"
+            dir="ltr"
+          >
+            <!--!-->
+            <!--!-->
+          </div>
+          <!--!-->
+          <!--!-->
+          <!--!-->
+          <!--!-->
+          <!--!-->
+          <!--!-->
+
+          <div
+            class="k-canvas k-pdf-viewer-canvas k-pos-relative k-overflow-auto"
+            tabindex="0"
+            aria-label="Document viewport"
+            role="document"
+          >
+            <!--!-->
+            <!--!--><!--!-->
+            <!--!--><!--!-->
+            <!--!-->
+
+            <div class="k-pdf-viewer-pages">
+              <!--!-->
+              <div class="k-page k-blank-page" style="display: none">
+                <!--!-->
+                <!--!-->
+                <!--!--><!--!-->
+                <!--!--><span
+                  class="telerik-blazor k-icon-xxxl k-icon k-svg-icon k-svg-i-folder-open"
+                  aria-hidden="true"
+                  ><!--!-->
+                  <svg
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 512 512"
+                  >
+                    <!--!-->
+                    <!--!-->
+                    <path
+                      d="M425.6 160h-246c-17.6 0-37.2 14.4-43.6 32L64 384V96h114.8l32 32H256l-64-64H64c-17.7 0-32 14.3-32 32v288c0 17.7 14.3 32 32 32h268.4c17.6 0 37.2-14.4 43.6-32l70-192c6.4-17.6-2.8-32-20.4-32zM346 373.1c-2 5.5-10.1 10.9-13.6 10.9H98.1L166 202.9c2-5.5 10.1-10.9 13.6-10.9h232.3L346 373.1z"
+                    ></path>
+                    <!--!--></svg
+                  ><!--!-->
+                  <!--!--> </span
+                ><!--!-->
+                <!--!-->
+                <!--!-->
+                <!--!--><!--!-->
+                <!--!--><!--!--><!--!-->
+                <!--!-->
+                <div
+                  data-id="46bf8c5a-525f-4691-be96-c4e6e3dd4feb"
+                  class="k-upload k-header telerik-blazor"
+                  dir="ltr"
+                  data-dropzone-id="818c4a53-e11d-4ac2-9838-f4f59b8700fc"
+                >
+                  <!--!-->
+                  <!--!-->
+                  <div
+                    class="telerik-blazor k-dropzone"
+                    data-id="db83319f-20ab-4150-810b-97fa72cc1ef3"
+                    id="818c4a53-e11d-4ac2-9838-f4f59b8700fc"
+                    style=""
+                  >
+                    <!--!-->
+                    <!--!-->
+                    <!--!-->
+                    <!--!--><!--!-->
+                    <div class="k-upload-button-wrap">
+                      <!--!-->
+                      <button
+                        type="button"
+                        class="k-upload-button k-button k-button-md k-button-solid k-button-solid-base k-rounded-md"
+                        tabindex="0"
+                        aria-label="Select files... . "
+                      >
+                        <!--!-->
+                        <span class="k-button-text">Select files...</span
+                        ><!--!-->
+                        <!--!--></button
+                      ><!--!-->
+                      <!--!-->
+                      <input
+                        class="k-hidden"
+                        autocomplete="off"
+                        name="files"
+                        type="file"
+                        title=""
+                        accept=".pdf,.PDF"
+                      /><!--!-->
+                      <!--!-->
+                    </div>
+                    <!--!-->
+                    <span class="k-dropzone-hint">Drag and drop files here</span
+                    ><!--!-->
+                    <!--!-->
+                    <!--!-->
+                    <!--!-->
+                  </div>
+                  <!--!-->
+                </div>
+                <!--!-->
+                <!--!-->
+                <!--!-->
+              </div>
+              <!--!-->
+              <div
+                class="k-page"
+                data-page-number="1"
+                style="width: 276.25px; height: 731.25px"
+              >
+                <canvas
+                  style="width: 100%; height: 100%"
+                  width="276"
+                  height="731"
+                ></canvas>
+                <div
+                  class="k-text-layer"
+                  style="width: 276.25px; height: 276.25px"
+                >
+                  <span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 43.125px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΓΕΩΡΓΙΟΣ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 92.625px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.1626);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 99.8125px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Ν</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 106px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >.</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 112.188px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(2.3252);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 126.562px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΜΟΥΣΤΑΚΑΣ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 182.25px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 189.438px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Α</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 195.625px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >.</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 201.812px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Ε</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 208px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >.</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 214.187px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Β</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 220.375px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >.</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 226.562px;
+                      top: 2.35714px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Ε</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 22.9125px;
+                      top: 15.4821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΥΠΕΡΜΑΡΚΕΤ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 84.7875px;
+                      top: 15.4821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.23539);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 92.425px;
+                      top: 15.4821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΠΑΙΧΝΙΔΙΩΝ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 154.3px;
+                      top: 15.4821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 161.938px;
+                      top: 15.4821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >&amp;</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 168.125px;
+                      top: 15.4821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.23539);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 175.762px;
+                      top: 15.4821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΠΑΙΔ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 200.512px;
+                      top: 15.4821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >.</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 206.7px;
+                      top: 15.4821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.23539);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 214.338px;
+                      top: 15.4821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΕΙΔΩΝ</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 30.05px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΥΠ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 42.425px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >:11</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 60.9875px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.21517);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 68.5px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΧΛΜ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 87.0625px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 94.575px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΘΕΣ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 113.138px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >/</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 119.325px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΚΗΣ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 137.887px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >-</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 144.075px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.21517);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 151.588px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΑΕΡ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 170.15px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >/</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 176.338px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΜΙΟΥ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 201.087px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.21517);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 208.6px;
+                      top: 28.6071px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΠΥΛΑΙΑ</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 45.9719px;
+                      top: 41.7321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >ΕΔΡΑ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 72.2415px;
+                      top: 41.7321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 78.8089px;
+                      top: 41.7321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >:</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 85.3764px;
+                      top: 41.7321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 91.9438px;
+                      top: 41.7321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >ΛΟΥΒΑΡΗ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 137.916px;
+                      top: 41.7321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 144.483px;
+                      top: 41.7321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >17</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 157.618px;
+                      top: 41.7321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 164.185px;
+                      top: 41.7321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >ΠΕΡΙΣΤΕΡΙ</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 31.1px;
+                      top: 54.8571px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Α</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 37.2875px;
+                      top: 54.8571px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >.</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 43.475px;
+                      top: 54.8571px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Φ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 49.6625px;
+                      top: 54.8571px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >.</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 55.85px;
+                      top: 54.8571px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Μ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 62.0375px;
+                      top: 54.8571px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >:094150585</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 123.912px;
+                      top: 54.8571px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.25763);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 131.688px;
+                      top: 54.8571px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΔΟΥ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 150.25px;
+                      top: 54.8571px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >:</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 156.438px;
+                      top: 54.8571px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΚΕΦΟΔΕ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 193.562px;
+                      top: 54.8571px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.25763);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 201.337px;
+                      top: 54.8571px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΑΤΤΙΚΗΣ</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 65.6741px;
+                      top: 67.9821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >ΤΗΛ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 85.3764px;
+                      top: 67.9821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >:</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 91.9438px;
+                      top: 67.9821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 98.5112px;
+                      top: 67.9821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >2310</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 124.781px;
+                      top: 67.9821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 131.348px;
+                      top: 67.9821px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >489515-16-17</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 52.5393px;
+                      top: 94.2321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >ΑΠΟΔΕΙΞΗ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 105.079px;
+                      top: 94.2321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 111.646px;
+                      top: 94.2321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >ΛΙΑΝΙΚΗΣ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 164.185px;
+                      top: 94.2321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 170.753px;
+                      top: 94.2321px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >ΠΩΛΗΣΗΣ</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 120.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >Ταμείο</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 39.4045px;
+                      top: 120.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 45.9719px;
+                      top: 120.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >009</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 65.6741px;
+                      top: 120.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 183.888px;
+                      top: 120.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >Χειριστής</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 242.994px;
+                      top: 120.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 249.562px;
+                      top: 120.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >1425</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 159.857px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.059);
+                    "
+                    >*401948000229</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >CANAL</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 30.9375px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 38.45px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >SO</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 50.825px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.21517);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 58.3375px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >SLIME</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 89.275px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 96.7875px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >MARBLE</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 133.912px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.21517);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 141.425px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >TWIST</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 172.363px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 179.875px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >&amp;</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 186.062px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(7.29102);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 231.137px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >24,99</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 262.075px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 269.587px;
+                      top: 172.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Γ</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 186.107px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.059);
+                    "
+                    >*401923077438</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ZURU</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 24.75px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.21517);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 32.2625px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >5</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 38.45px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.21517);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 45.9625px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >SURPRISE</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 95.4625px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 102.975px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >FOODIE</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 140.1px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.21517);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 147.613px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >MINI</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 172.363px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 179.875px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >BR</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 192.25px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(7.29102);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 237.325px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >9,99</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 262.075px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 269.587px;
+                      top: 199.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Γ</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 212.357px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.059);
+                    "
+                    >*401999008627</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 225.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ZURU</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 24.75px;
+                      top: 225.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.21517);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 32.2625px;
+                      top: 225.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >OOSH</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 57.0125px;
+                      top: 225.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 64.525px;
+                      top: 225.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >COTTON</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 101.65px;
+                      top: 225.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.21517);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 109.162px;
+                      top: 225.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >CANDY</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 140.1px;
+                      top: 225.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 147.613px;
+                      top: 225.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >SERIES</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 184.738px;
+                      top: 225.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(8.50619);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 237.325px;
+                      top: 225.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >3,99</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 262.075px;
+                      top: 225.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 269.587px;
+                      top: 225.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Γ</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 238.607px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.059);
+                    "
+                    >*401948000190</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 251.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >CANAL</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 30.9375px;
+                      top: 251.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.23539);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 38.575px;
+                      top: 251.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >SO</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 50.95px;
+                      top: 251.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 58.5875px;
+                      top: 251.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >SLIME</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 89.525px;
+                      top: 251.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.23539);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 97.1625px;
+                      top: 251.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >SLIMELICIOUS</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 171.412px;
+                      top: 251.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 179.05px;
+                      top: 251.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΒΑ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 191.425px;
+                      top: 251.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(7.41234);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 237.25px;
+                      top: 251.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >4,99</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 262px;
+                      top: 251.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 269.637px;
+                      top: 251.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Γ</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 264.857px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.059);
+                    "
+                    >*401948000252</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >CANAL</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 30.9375px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.18484);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 38.2625px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >SO</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 50.6375px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 57.9625px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >SLIME</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 88.9px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.18484);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 96.225px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >DRINKS</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 133.35px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 140.675px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >1</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 146.863px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.18484);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 154.188px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >PACK</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 178.938px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 237.537px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >4,99</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 262.288px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.18484);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 269.613px;
+                      top: 277.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Γ</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 291.107px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.059);
+                    "
+                    >*401948000299</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >CANAL</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 30.9375px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.17271);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 38.1875px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >SO</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 50.5625px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 57.8125px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >SLIME</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 88.75px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.17271);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 96px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ICE</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 114.562px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 121.812px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >CUP</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 140.375px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.17271);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 147.625px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ASS.</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 172.375px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 237.625px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >4,99</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 262.375px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.17271);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 269.625px;
+                      top: 304.232px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Γ</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 317.357px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.059);
+                    "
+                    >*401948026028</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 330.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >CANAL</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 30.9375px;
+                      top: 330.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.23539);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 38.575px;
+                      top: 330.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >CRAZE</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 69.5125px;
+                      top: 330.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 77.15px;
+                      top: 330.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >SENSATIONS</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 139.025px;
+                      top: 330.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.23539);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 146.662px;
+                      top: 330.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >MIX'N</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 177.6px;
+                      top: 330.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 185.238px;
+                      top: 330.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >M</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 191.425px;
+                      top: 330.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(7.41234);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 237.25px;
+                      top: 330.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >6,99</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 262px;
+                      top: 330.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 269.637px;
+                      top: 330.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Γ</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 216.725px;
+                      top: 343.607px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >---------</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 356.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >Μερικό</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 39.4045px;
+                      top: 356.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 45.9719px;
+                      top: 356.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >Σύνολο</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 85.3764px;
+                      top: 356.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 229.859px;
+                      top: 356.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >60,93</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >Σ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 6.56246px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 13.1249px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >ύ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 19.6874px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 26.2498px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >ν</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 32.8123px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 39.3748px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >ο</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 45.9372px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 52.4997px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >λ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 59.0622px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 65.6246px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >ο</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 72.1871px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(20.1685);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 196.874px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >6</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 203.436px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 209.999px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >0</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 216.561px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 223.124px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >,</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 229.686px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 236.249px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >9</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 242.811px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 249.374px;
+                      top: 382.982px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >3</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 396.107px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                    >ΠΙΣΤΩΤΙΚΗ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 59.0622px;
+                      top: 396.107px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 65.6246px;
+                      top: 396.107px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                    >ΚΑΡΤΑ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 98.4369px;
+                      top: 396.107px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 229.686px;
+                      top: 396.107px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                    >60,93</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 422.357px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >Τεμάχια</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 43.3125px;
+                      top: 422.357px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.25359);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 51.0625px;
+                      top: 422.357px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >:</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 57.25px;
+                      top: 422.357px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.25359);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 65px;
+                      top: 422.357px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >7</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 435.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0623);
+                    "
+                    >------------------------------------------</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 448.607px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΚΩΔΙΚΟΣ</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 43.3125px;
+                      top: 448.607px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.91071);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 55.125px;
+                      top: 448.607px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >ΠΩΛΗΣΗΣ</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 527.357px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >Σειρά</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 30.9375px;
+                      top: 527.357px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                    >:</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 37.125px;
+                      top: 527.357px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.91071);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 48.9375px;
+                      top: 527.357px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >0014-9-01-914</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 129.375px;
+                      top: 527.357px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 141.188px;
+                      top: 527.357px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >00126800</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 50.3125px;
+                      top: 540.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >05-04-2025</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 112.188px;
+                      top: 540.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.1626);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 119.375px;
+                      top: 540.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >18:40:33</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 168.875px;
+                      top: 540.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 176.062px;
+                      top: 540.482px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >00140009</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 553.607px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.0615);
+                    "
+                    >88DDCBA4D05656F9F0BC92CC229996214CC0116A</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 566.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >MARK:400009028427087Epsilon</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 167.062px;
+                      top: 566.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.80961);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 178.25px;
+                      top: 566.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >Net</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 196.812px;
+                      top: 566.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 208px;
+                      top: 566.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >A.E.</span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 232.75px;
+                      top: 566.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.80961);
+                    "
+                  >
+                  </span
+                  ><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 243.937px;
+                      top: 566.732px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.00085);
+                    "
+                    >htt</span
+                  ><br role="presentation" /><span
+                    role="presentation"
+                    dir="ltr"
+                    style="
+                      left: 0px;
+                      top: 579.857px;
+                      font-size: 10.3125px;
+                      font-family: monospace;
+                      transform: scaleX(1.059);
+                    "
+                    >ps://www.epsilondigital.gr</span
+                  >
+                </div>
+              </div>
+            </div>
+            <!--!-->
+          </div>
+          <!--!-->
+        </div>
+      </div>
+    </div>
+    <!--!-->
+
+    <!--!--><!--!-->
+    <!--!-->
+    <!--!-->
+    <!--!-->
+    <!--!-->
+    <!--!-->
+
+    <!--!--><!--!-->
+    <!--!--><!--!-->
+    <!--!--><!--!-->
+
+    <!--!--><style>
+      .k-pdf-viewer .k-toolbar {
+        display: none;
+      }
+
+      .doc-body .form-section,
+      .pdf-viewer-wrapper {
+        margin: 0 2rem;
+      }
+
+      body {
+        overflow: hidden;
+      }
+    </style>
+
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
+    <script
+      type="text/javascript"
+      src="js/PreviewPdfFile.js?v=SErCG5H3hbT-kDOBJ0R-QxDIqwWOOe_7F7AUsFil0qo"
+    ></script>
+    <script
+      type="text/javascript"
+      src="js/DownloadFile.js?v=B7C2XnSowuJb1xdTNbVfhB8rrhn5XsDX01UZe_1hTOY"
+    ></script>
+    <script
+      type="text/javascript"
+      src="js/sweetalert2.js?v=uAW617vE0TQfYj_QVOqCk2o9RUM3pZFJ1A7LRSw5Nu8"
+    ></script>
+    <script
+      type="text/javascript"
+      src="js/popup.js?v=cwuZ4T2uiN2tzaiwGyMMvGOdwqwtlfS6YMO6c9UxQoQ"
+    ></script>
+    <script
+      type="text/javascript"
+      src="js/PrintPdf.js?v=9hptIcOREsf7oA3Yug4ZTP7_72VQDs3hftqAYSeqTnY"
+    ></script>
+    <script src="js/helpers.js?v=kIH1oTxKxv-gkKAmCdbyXUvMawMEP5x93eFXyB05PL4"></script>
+    <script>
+      function toggleMenu() {
+        var list = document.querySelector(".doc-actions__list");
+        list.classList.toggle("-visible");
+      }
+    </script>
+
+    <script
+      type="text/javascript"
+      src="/js/jquery/jquery-3.2.1.min.js?v=hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4"
+    ></script>
+    <script
+      type="text/javascript"
+      src="/js/bootstrap.min.js?v=4CRZCx7x-fy5Y4rjdeWewBDdm26fnFkLc4lF9Ol5EDw"
+    ></script>
+
+    <script
+      src="_content/Telerik.UI.for.Blazor/js/telerik-blazor.js?v=Xr89dd5-OyeOQ4IgGpaCGtGv9quY_KAZcSfWvO9XPdE"
+      defer=""
+    ></script>
+    <script src="_framework/blazor.server.js" autostart="false"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    </script>
+    <script>
+      var culture = getCookie(".AspNetCore.Culture");
+      if (culture == "") {
+        try {
+          culture = loginHandler.getCulture();
+        } catch {
+          culture = "el-GR";
+        }
+      }
+
+      var cultureData =
+        culture.indexOf("el-GR") > -1
+          ? "el-GR"
+          : culture.indexOf("en-US") > -1
+          ? "en-US"
+          : "en-GB";
+
+      Blazor.start({
+        applicationCulture: cultureData,
+      });
+
+      function getCookie(cname) {
+        let name = cname + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(";");
+        for (let i = 0; i < ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) == " ") {
+            c = c.substring(1);
+          }
+          if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+          }
+        }
+        return "";
+      }
+    </script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
+    <script src="js/cloudflareScripts.js?v=zpndIQUZyadAZ70VhC4sYmgQvR7wHB2kRUicfuncdmA"></script>
+  </body>
+</html>

@@ -169,7 +169,8 @@ export async function POST(req: NextRequest) {
           name: item.name,
           quantity: item.quantity,
           price: item.price, // Total price
-          unit_price: item.unit_price, // Add unit price here
+          unit_price: item.unit_price,
+          vat_percentage: item.vat_percentage, // Add vat_percentage here
         }));
 
         console.log(`Job ${jobId!}: Inserting ${itemsToInsert.length} items...`);
